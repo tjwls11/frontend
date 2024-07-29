@@ -1,44 +1,42 @@
 import React, { useState, useEffect } from 'react';
 import {
     format, addMonths, subMonths, isSameMonth, isSameDay, startOfMonth,
-    endOfMonth, startOfWeek, endOfWeek, addDays, isAfter, eachMonthOfInterval,
-    startOfYear, endOfYear, addYears, subYears
+    endOfMonth, startOfWeek, endOfWeek, addDays, isAfter, setMonth,
+    setYear, startOfYear, endOfYear, eachMonthOfInterval, addYears, subYears
 } from 'date-fns';
-import { fetchUserStickers, addToCalendar, setMoodColor } from './api/api';
 
 function Calendar() {
-    const colors = ['#FFABAB', '#FFC3A0', '#FFF58E', '#CDE6A5', '#ACD1EA', '#9FB1D9', '#C8BFE7'];
-
+    const colors = ['','#FFABAB', '#FFC3A0', '#FFF58E', '#CDE6A5','#ACD1EA','#9FB1D9','#C8BFE7'];
     const [currentMonth, setCurrentMonth] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState(null);
     const [moodColors, setMoodColors] = useState({});
     const [showColorPicker, setShowColorPicker] = useState(false);
     const [today, setToday] = useState(new Date());
+    const [isEditingMonth, setIsEditingMonth] = useState(false);
+    const [isEditingYear, setIsEditingYear] = useState(false);
+    const [inputMonth, setInputMonth] = useState(format(currentMonth, 'M'));
+    const [inputYear, setInputYear] = useState(format(currentMonth, 'yyyy'));
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isYearlyView, setIsYearlyView] = useState(false);
     const [currentYear, setCurrentYear] = useState(new Date());
-    const [stickers, setStickers] = useState([]);
-    const [showStickerPicker, setShowStickerPicker] = useState(false);
-
-    // 환경변수로 토큰을 관리하거나, 로그인 상태에서 가져오는 것이 좋습니다.
-    const token = process.env.REACT_APP_API_TOKEN; 
+    const [isEditingYearInYearlyView, setIsEditingYearInYearlyView] = useState(false);
 
     useEffect(() => {
         setToday(new Date());
-        fetchUserStickersData();
+        // 페이지 로드 시 로컬 스토리지에서 색상 정보를 가져옴
+        const storedMoodColors = JSON.parse(localStorage.getItem('moodColors')) || {};
+        setMoodColors(storedMoodColors);
     }, []);
 
-    const fetchUserStickersData = async () => {
-        try {
-            const data = await fetchUserStickers(token);
-            console.log('Fetched stickers:', data.stickers); // 응답 확인
-            setStickers(data.stickers);
-        } catch (error) {
-            console.error('Error fetching user stickers:', error.message);
-        }
-    };
+    useEffect(() => {
+        // 색상 정보가 변경될 때마다 로컬 스토리지에 저장
+        localStorage.setItem('moodColors', JSON.stringify(moodColors));
+    }, [moodColors]);
 
     const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
     const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
+    const prevYear = () => setCurrentYear(subYears(currentYear, 1));
+    const nextYear = () => setCurrentYear(addYears(currentYear, 1));
     const goToToday = () => {
         setCurrentMonth(startOfMonth(today));
         setIsYearlyView(false);
@@ -48,136 +46,292 @@ function Calendar() {
         if (!isAfter(day, today)) {
             setSelectedDate(day);
             setShowColorPicker(true);
-            setShowStickerPicker(true);
         }
     };
 
-    const handleColorClick = async (color) => {
+    const handleColorClick = (color) => {
         if (selectedDate) {
-            try {
-                const dateFormatted = format(selectedDate, 'yyyy-MM-dd');
-                setMoodColors(prevColors => ({
-                    ...prevColors,
-                    [dateFormatted]: color,
-                }));
-                await setMoodColor(dateFormatted, color, token);
-            } catch (error) {
-                console.error('Failed to set mood color:', error.message);
-            }
+            setMoodColors(prevColors => ({
+                ...prevColors,
+                [format(selectedDate, 'yyyy-MM-dd')]: color,
+            }));
         }
         setShowColorPicker(false);
     };
 
-    const handleStickerClick = async (stickerId) => {
-        if (selectedDate) {
-            try {
-                const formattedDate = format(selectedDate, 'yyyy-MM-dd');
-                await addToCalendar(formattedDate, moodColors[formattedDate] || colors[0], stickerId, token);
-                setShowStickerPicker(false);
-            } catch (error) {
-                console.error('Failed to add sticker to calendar:', error.message);
-            }
+    const handleMonthChange = () => {
+        const newMonth = parseInt(inputMonth, 10);
+        if (newMonth >= 1 && newMonth <= 12) {
+            setCurrentMonth(setMonth(currentMonth, newMonth - 1));
+            setIsEditingMonth(false);
+        }
+    };
+
+    const handleYearChange = () => {
+        const newYear = parseInt(inputYear, 10);
+        if (newYear >= 1900) {
+            setCurrentMonth(setYear(currentMonth, newYear));
+            setIsEditingYear(false);
+        }
+    };
+
+    const handleYearChangeInYearlyView = () => {
+        const newYear = parseInt(inputYear, 10);
+        if (newYear >= 1900) {
+            setCurrentYear(setYear(currentYear, newYear));
+            setIsEditingYearInYearlyView(false);
+        }
+    };
+
+    const handleKeyDown = (e, callback) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            callback();
         }
     };
 
     const RenderHeader = ({ currentMonth, prevMonth, nextMonth }) => (
         <div className="calendar-header">
             <button className="prev-button" onClick={prevMonth}>◀</button>
-            <span>{format(currentMonth, 'yyyy년 M월')}</span>
+            <div className="month-year-container">
+                {isEditingYear ? (
+                    <input
+                        type="number"
+                        value={inputYear}
+                        onChange={(e) => setInputYear(e.target.value)}
+                        onBlur={handleYearChange}
+                        onKeyDown={(e) => handleKeyDown(e, handleYearChange)}
+                        autoFocus
+                        className="month-year-input"
+                    />
+                ) : (
+                    <span className="month-year" onClick={() => setIsEditingYear(true)}>
+                        {format(currentMonth, 'yyyy년')}
+                    </span>
+                )}
+                {isEditingMonth ? (
+                    <input
+                        type="number"
+                        value={inputMonth}
+                        onChange={(e) => setInputMonth(e.target.value)}
+                        onBlur={handleMonthChange}
+                        onKeyDown={(e) => handleKeyDown(e, handleMonthChange)}
+                        autoFocus
+                        className="month-year-input"
+                    />
+                ) : (
+                    <span className="month-year" onClick={() => setIsEditingMonth(true)}>
+                        {format(currentMonth, 'M월')}
+                    </span>
+                )}
+            </div>
             <button className="next-button" onClick={nextMonth}>▶</button>
-            <button className="yearly-view-button" onClick={() => setIsYearlyView(!isYearlyView)}>📅</button>
-            <button className="today-button" onClick={goToToday}>Today</button>
         </div>
     );
 
-    const RenderDays = () => (
-        <div className="days">
-            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                <div key={day} className="col">{day}</div>
-            ))}
-        </div>
-    );
+    const RenderDays = () => {
+        const days = [];
+        const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+        for (let i = 0; i < 7; i++) {
+            days.push(
+                <div className="col" key={i}>
+                    {dayLabels[i]}
+                </div>
+            );
+        }
+
+        return <div className="days row">{days}</div>;
+    };
 
     const RenderCells = ({ currentMonth, moodColors, onDateClick }) => {
         const monthStart = startOfMonth(currentMonth);
         const monthEnd = endOfMonth(monthStart);
         const startDate = startOfWeek(monthStart);
         const endDate = endOfWeek(monthEnd);
+    
+        const rows = [];
+        let day = startDate;
+    
+        while (day <= endDate) {
+            const days = [];
+    
+            for (let i = 0; i < 7; i++) {
+                const currentDay = day;
+                const dayKey = format(currentDay, 'yyyy-MM-dd');
+                const dayColor = moodColors[dayKey] || 'transparent';
+    
+                days.push(
+                    <div
+                        className={`col cell ${
+                            !isSameMonth(currentDay, startOfMonth(currentMonth))
+                                ? 'disabled'
+                                : isSameDay(currentDay, today)
+                                ? 'today'
+                                : isSameDay(currentDay, selectedDate)
+                                ? 'selected'
+                                : 'valid'
+                        } ${isAfter(currentDay, today) ? 'disabled' : ''}`}
+                        key={dayKey}
+                        style={{ backgroundColor: dayColor }}
+                        onClick={() => onDateClick(currentDay)}
+                    >
+                        <span className={
+                            !isSameMonth(currentDay, startOfMonth(currentMonth))
+                                ? 'text not-valid'
+                                : ''
+                        }>
+                            {format(currentDay, 'd')}
+                        </span>
+                    </div>
+                );
+    
+                day = addDays(day, 1);
+            }
+            rows.push(
+                <div className="row" key={format(day, 'yyyy-MM-dd')}>
+                    {days}
+                </div>
+            );
+        }
+        return <div className="body">{rows}</div>;
+    };
+    
+    const RenderMiniMonth = ({ month, moodColors, onMonthClick }) => {
+        const monthStart = startOfMonth(month);
+        const monthEnd = endOfMonth(month);
+        const startDate = startOfWeek(monthStart);
+        const endDate = endOfWeek(monthEnd);
+
         const rows = [];
         let day = startDate;
 
         while (day <= endDate) {
             const days = [];
-
             for (let i = 0; i < 7; i++) {
                 const currentDay = day;
-                const isToday = isSameDay(currentDay, today);
-                const isSelected = isSameDay(currentDay, selectedDate);
-                const isInCurrentMonth = isSameMonth(currentDay, currentMonth);
-                const formattedDate = format(currentDay, 'yyyy-MM-dd');
-                const backgroundColor = moodColors[formattedDate] || 'transparent';
+                const dayKey = format(currentDay, 'yyyy-MM-dd');
+                const dayColor = moodColors[dayKey] || 'transparent';
 
                 days.push(
                     <div
-                        key={currentDay}
-                        className={`cell ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''} ${isInCurrentMonth ? 'valid' : 'disabled'}`}
-                        style={{ backgroundColor }}
-                        onClick={() => onDateClick(currentDay)}
+                        className={`monthly-calendar-cell ${
+                            !isSameMonth(currentDay, monthStart) ? 'disabled' : ''
+                        } ${
+                            isSameDay(currentDay, today) ? 'today' : ''
+                        }`}
+                        key={dayKey}
+                        onClick={() => onMonthClick(month)}
                     >
-                        {format(currentDay, 'd')}
-                        {moodColors[formattedDate] && <div className="sticker" />}
+                        <div className="day-circle" style={{ backgroundColor: dayColor }}>
+                            {format(currentDay, 'd')}
+                        </div>
                     </div>
                 );
-
                 day = addDays(day, 1);
             }
-
-            rows.push(<div key={day} className="row">{days}</div>);
+            rows.push(
+                <div className="row" key={format(day, 'yyyy-MM-dd')}>
+                    {days}
+                </div>
+            );
         }
 
-        return <div className="body">{rows}</div>;
+        return (
+            <div className="monthly-calendar" onClick={() => onMonthClick(month)}>
+                <div className="month-box">
+                    <div className="month-title">{format(month, 'M월')}</div>
+                    {rows}
+                </div>
+            </div>
+        );
     };
 
-    const RenderMiniMonth = () => {
-        const months = eachMonthOfInterval({
-            start: startOfYear(currentYear),
-            end: endOfYear(currentYear)
-        });
+    const RenderYearView = ({ currentYear, moodColors }) => {
+        const yearStart = startOfYear(currentYear);
+        const yearEnd = endOfYear(currentYear);
+        const months = eachMonthOfInterval({ start: yearStart, end: yearEnd });
+
+        const handleMonthClick = (month) => {
+            setCurrentMonth(month);
+            setIsYearlyView(false);
+        };
 
         return (
             <div className="year-view">
                 <div className="year-header">
-                    <button className="prev-button" onClick={() => setCurrentYear(subYears(currentYear, 1))}>◀</button>
-                    <span>{format(currentYear, 'yyyy년')}</span>
-                    <button className="next-button" onClick={() => setCurrentYear(addYears(currentYear, 1))}>▶</button>
+                    <button onClick={prevYear} className="prev-button">◀</button>
+                    {isEditingYearInYearlyView ? (
+                        <input
+                            type="number"
+                            value={inputYear}
+                            onChange={(e) => setInputYear(e.target.value)}
+                            onBlur={handleYearChangeInYearlyView}
+                            onKeyDown={(e) => handleKeyDown(e, handleYearChangeInYearlyView)}
+                            autoFocus
+                            className="year-input"
+                        />
+                    ) : (
+                        <span className="year-display" onClick={() => setIsEditingYearInYearlyView(true)}>
+                            {format(currentYear, 'yyyy년')}
+                        </span>
+                    )}
+                    <button onClick={nextYear} className="next-button">▶</button>
                 </div>
                 <div className="months-container">
-                    {months.map(month => (
-                        <div 
-                            key={month} 
-                            className="monthly-calendar"
-                            onClick={() => {
-                                setCurrentMonth(startOfMonth(month));
-                                setIsYearlyView(false);
-                            }}
-                        >
-                            <span>{format(month, 'M월')}</span>
-                        </div>
+                    {months.map((month, index) => (
+                        <RenderMiniMonth
+                            key={index}
+                            month={month}
+                            moodColors={moodColors}
+                            onMonthClick={handleMonthClick}
+                        />
                     ))}
                 </div>
             </div>
         );
     };
 
+    const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+    const handleYearlyViewClick = () => setIsYearlyView(true);
+    const handleCurrentViewClick = () => setIsYearlyView(false);
+
     return (
         <div className="calendar-container">
-            <RenderHeader
-                currentMonth={currentMonth}
-                prevMonth={prevMonth}
-                nextMonth={nextMonth}
-            />
-            <RenderDays />
-            {isYearlyView ? <RenderMiniMonth /> : <RenderCells currentMonth={currentMonth} moodColors={moodColors} onDateClick={onDateClick} />}
+            <div className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
+                {!isSidebarOpen && (
+                    <div className="sidebar-icon" onClick={toggleSidebar}>
+                        <span className="material-symbols-outlined">calendar_today</span>
+                    </div>
+                )}
+                {isSidebarOpen && (
+                    <div className="sidebar-content">
+                        <button className="close-button" onClick={toggleSidebar}>◀</button>
+                        <button className="sidebar-button" onClick={handleYearlyViewClick}>연간 달력 보기</button>
+                        <button className="sidebar-button" onClick={handleCurrentViewClick}>월별 달력 보기</button>
+                        <span className="material-symbols-outlined" onClick={goToToday}>refresh</span>
+                    </div>
+                )}
+            </div>
+            {!isYearlyView ? (
+                <>
+                    <RenderHeader
+                        currentMonth={currentMonth}
+                        prevMonth={prevMonth}
+                        nextMonth={nextMonth}
+                    />
+                    <div className="calendar">
+                        <RenderDays />
+                        <RenderCells
+                            currentMonth={currentMonth}
+                            moodColors={moodColors}
+                            onDateClick={onDateClick}
+                        />
+                    </div>
+                </>
+            ) : (
+                <RenderYearView currentYear={currentYear} moodColors={moodColors} />
+            )}
             {showColorPicker && (
                 <div className="color-picker">
                     {colors.map(color => (
@@ -187,23 +341,6 @@ function Calendar() {
                             style={{ backgroundColor: color }}
                             onClick={() => handleColorClick(color)}
                         />
-                    ))}
-                </div>
-            )}
-            {showStickerPicker && (
-                <div className="sticker-picker">
-                    {stickers.map(sticker => (
-                        <div
-                            key={sticker.sticker_id}
-                            className="sticker-option"
-                            onClick={() => handleStickerClick(sticker.sticker_id)}
-                        >
-                            <img
-                                src={sticker.image_url}
-                                alt={sticker.name}
-                                style={{ width: '30px', height: '30px' }}
-                            />
-                        </div>
                     ))}
                 </div>
             )}

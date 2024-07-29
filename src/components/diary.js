@@ -48,11 +48,12 @@ const Diary = () => {
                 }
             });
 
-            if (response.ok) { // 요청이 성공적일 경우
+            if (response.ok) {
                 setDiaries(diaries.filter((diary) => diary.id !== id));
             } else {
                 // 서버 응답이 성공적이지 않은 경우
-                console.error('Failed to delete the diary:', await response.text());
+                const errorMessage = await response.text(); // 응답 메시지 가져오기
+                console.error('Failed to delete the diary:', errorMessage);
             }
         } catch (error) {
             console.error('Error deleting diary:', error);

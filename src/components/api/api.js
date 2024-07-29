@@ -2,32 +2,72 @@ import axios from 'axios';
 
 const API_URL = process.env.API_URL || 'http://localhost:3011';
 
-// 공통 헤더 설정 함수
-const getAuthHeaders = (token) => ({
-  headers: {
-    'Authorization': `Bearer ${token}`,
-    'Content-Type': 'application/json',
-  },
-});
+// 공통 요청 헤더
+const getAuthHeaders = (token) => {
+  if (!token) {
+    console.error("토큰이 제공되지 않았습니다.");
+    throw new Error("토큰이 필요합니다.");
+  }
+  return {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  };
+};
+
+// 공통 에러 핸들러
+const handleError = (message, error) => {
+  const status = error.response?.status;
+  const errorMessage = error.response?.data?.message || error.message;
+
+  console.error(`${message} - Status: ${status}, Message: ${errorMessage}`);
+
+  if (status === 401) {
+    throw new Error("로그인 세션이 만료되었습니다. 다시 로그인 해주세요.");
+  } else {
+    throw new Error(message);
+  }
+};
+
+
+
+// 무드 색상 설정
+export const setMoodColor = async (date, color, token) => {
+  try {
+    await axios.post(`${API_URL}/set-mood-color`, { date, color }, getAuthHeaders(token));
+  } catch (error) {
+    handleError('무드 색상 설정 중 오류가 발생했습니다.', error);
+  }
+};
+
+// 달력에 추가
+export const addToCalendar = async (date, color, stickerId, token) => {
+  try {
+    await axios.post(`${API_URL}/add-to-calendar`, { date, color, stickerId }, getAuthHeaders(token));
+  } catch (error) {
+    handleError('달력에 추가하는 중 오류가 발생했습니다.', error);
+  }
+};
+
 
 // 사용자 정보 가져오기
 export const fetchUserInfo = async (token) => {
   try {
-    const response = await axios.get(`${API_URL}/user-info`, getAuthHeaders(token));
-    return response.data.user;
+    const response = await axios.get(`${API_URL}/get-user-info`, getAuthHeaders(token));
+    return response.data;
   } catch (error) {
-    console.error('Error fetching user info:', error.response?.status, error.response?.data?.message || error.message);
-    throw new Error('Failed to fetch user information');
+    handleError('사용자 정보 요청 중 오류가 발생했습니다.', error);
   }
 };
 
 // 비밀번호 변경
 export const changePassword = async (currentPassword, newPassword, token) => {
   try {
-    await axios.post(`${API_URL}/change-password`, { currentPassword, newPassword }, getAuthHeaders(token));
+    const response = await axios.post(`${API_URL}/change-password`, { currentPassword, newPassword }, getAuthHeaders(token));
+    return response.data;
   } catch (error) {
-    console.error('Error changing password:', error.response?.status, error.response?.data?.message || error.message);
-    throw new Error('Failed to change password');
+    handleError('비밀번호 변경 중 오류가 발생했습니다.', error);
   }
 };
 
@@ -36,8 +76,7 @@ export const addDiary = async (date, title, content, one, token) => {
   try {
     await axios.post(`${API_URL}/add-diary`, { date, title, content, one }, getAuthHeaders(token));
   } catch (error) {
-    console.error('Error adding diary:', error.response?.status, error.response?.data?.message || error.message);
-    throw new Error('Failed to add diary');
+    handleError('다이어리 추가 중 오류가 발생했습니다.', error);
   }
 };
 
@@ -47,8 +86,7 @@ export const fetchDiaries = async (token) => {
     const response = await axios.get(`${API_URL}/get-diaries`, getAuthHeaders(token));
     return response.data.diaries;
   } catch (error) {
-    console.error('Error fetching diaries:', error.response?.status, error.response?.data?.message || error.message);
-    throw new Error('Failed to fetch diaries');
+    handleError('다이어리 목록 조회 중 오류가 발생했습니다.', error);
   }
 };
 
@@ -58,8 +96,7 @@ export const fetchDiary = async (id, token) => {
     const response = await axios.get(`${API_URL}/get-diary/${id}`, getAuthHeaders(token));
     return response.data.diary;
   } catch (error) {
-    console.error('Error fetching diary:', error.response?.status, error.response?.data?.message || error.message);
-    throw new Error('Failed to fetch diary');
+    handleError('다이어리 상세 조회 중 오류가 발생했습니다.', error);
   }
 };
 
@@ -68,73 +105,16 @@ export const deleteDiary = async (id, token) => {
   try {
     await axios.delete(`${API_URL}/delete-diary/${id}`, getAuthHeaders(token));
   } catch (error) {
-    console.error('Error deleting diary:', error.response?.status, error.response?.data?.message || error.message);
-    throw new Error('Failed to delete diary');
+    handleError('다이어리 삭제 중 오류가 발생했습니다.', error);
   }
 };
 
-// 스티커 목록 가져오기
-export const fetchUserStickers = async (token) => {
+// 캘린더 항목 조회
+export const fetchCalendarEntries = async (token) => {
   try {
-    const response = await axios.get(`${API_URL}/get-user-stickers`, getAuthHeaders(token));
+    const response = await axios.get(`${API_URL}/get-calendar`, getAuthHeaders(token));
     return response.data;
   } catch (error) {
-    console.error('Error fetching user stickers:', error.response?.status, error.response?.data?.message || error.message);
-    throw new Error('Failed to fetch user stickers');
-  }
-};
-
-// 스티커 추가
-export const addSticker = async (name, imageUrl, token) => {
-  try {
-    await axios.post(`${API_URL}/add-sticker`, { name, imageUrl }, getAuthHeaders(token));
-  } catch (error) {
-    console.error('Error adding sticker:', error.response?.status, error.response?.data?.message || error.message);
-    throw new Error('Failed to add sticker');
-  }
-};
-
-// 스티커 구매
-export const buySticker = async (stickerId, token) => {
-  try {
-    const response = await axios.post(`${API_URL}/buy-sticker`, { sticker_id: stickerId }, getAuthHeaders(token));
-    return response.data;
-  } catch (error) {
-    console.error('Error buying sticker:', error.response?.status, error.response?.data?.message || error.message);
-    throw new Error('Failed to buy sticker');
-  }
-};
-
-// 캘린더에 스티커 추가
-export const addToCalendar = async (date, color, stickerId, token) => {
-  try {
-    await axios.post(`${API_URL}/add-to-calendar`, { date, color, sticker_id: stickerId }, getAuthHeaders(token));
-  } catch (error) {
-    console.error('Error adding to calendar:', error.response?.status, error.response?.data?.message || error.message);
-    throw new Error('Failed to add to calendar');
-  }
-};
-
-// 날짜 범위에 따른 무드 색상 가져오기
-export const fetchMoodRange = async (startDate, endDate, token) => {
-  try {
-    const response = await axios.get(`${API_URL}/get-mood-range`, {
-      params: { startDate, endDate },
-      headers: { 'Authorization': `Bearer ${token}` },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching mood range:', error.response?.status, error.response?.data?.message || error.message);
-    throw new Error('Failed to fetch mood range');
-  }
-};
-
-// 특정 날짜의 무드 색상 설정
-export const setMoodColor = async (date, color, token) => {
-  try {
-    await axios.post(`${API_URL}/set-mood`, { date, color }, getAuthHeaders(token));
-  } catch (error) {
-    console.error('Error setting mood color:', error.response?.status, error.response?.data?.message || error.message);
-    throw new Error('Failed to set mood color');
+    handleError('캘린더 항목을 가져오는 중 오류가 발생했습니다.', error);
   }
 };

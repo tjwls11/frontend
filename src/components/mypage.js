@@ -11,18 +11,20 @@ const MyPage = () => {
   useEffect(() => {
     const getUserInfo = async () => {
       const token = localStorage.getItem('token');
-      const storedUser = JSON.parse(localStorage.getItem('user'));
-
-      if (!token || !storedUser) {
+      if (!token) {
         alert("로그인이 필요합니다.");
         window.location.href = "/Login";
         return;
       }
 
       try {
-        const userInfo = await fetchUserInfo(token);
-        setUser(userInfo);
-        localStorage.setItem('user', JSON.stringify(userInfo)); // 사용자 정보 로컬 저장
+        const response = await fetchUserInfo(token);
+        if (response.isSuccess) {
+          setUser(response.user); // `response.user`에 유저 정보를 저장
+          localStorage.setItem('user', JSON.stringify(response.user)); // 사용자 정보 로컬 저장
+        } else {
+          setError("유저 정보 요청 중 오류가 발생했습니다.");
+        }
       } catch (error) {
         console.error("유저 정보 요청 중 오류가 발생했습니다.", error);
         setError("유저 정보 요청 중 오류가 발생했습니다.");
@@ -34,12 +36,6 @@ const MyPage = () => {
     getUserInfo();
   }, []);
 
-  //const handleLogout = () => {
-   // localStorage.removeItem("token");
-   // localStorage.removeItem("user");
-   // window.location.href = "/Login";
- // };
-
   const handleChangePassword = async () => {
     if (!currentPassword || !newPassword) {
       alert("모든 필드를 입력하세요.");
@@ -47,15 +43,16 @@ const MyPage = () => {
     }
 
     const token = localStorage.getItem('token');
+    if (!token) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+
     try {
-      const success = await changePassword(currentPassword, newPassword, token);
-      if (success.isSuccess) {
-        alert("비밀번호가 변경되었습니다.");
-        setCurrentPassword("");
-        setNewPassword("");
-      } else {
-        alert("비밀번호 변경에 실패했습니다.");
-      }
+      await changePassword(currentPassword, newPassword, token);
+      alert("비밀번호가 변경되었습니다.");
+      setCurrentPassword("");
+      setNewPassword("");
     } catch (error) {
       console.error("비밀번호 변경 중 오류가 발생했습니다.", error);
       alert("비밀번호 변경 중 오류가 발생했습니다.");
@@ -97,7 +94,7 @@ const MyPage = () => {
               </tr>
               <tr>
                 <th className="name">내 코인</th>
-                <td>{user.coin || '정보 없음'}</td>
+                <td>{user.coin || '0'}</td>
               </tr>
             </tbody>
           </table>
