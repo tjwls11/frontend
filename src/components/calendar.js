@@ -1,6 +1,9 @@
 import React, { useState, useEffect, memo } from 'react';
-import { format, startOfMonth, endOfMonth, addMonths, subMonths, startOfWeek, endOfWeek, addDays, isSameDay, isSameMonth, isAfter, setMonth, setYear } from 'date-fns';
-import { fetchMoodRange, setMoodColor, fetchUserStickers, addToCalendar } from './api/api';
+import { 
+  format,startOfMonth,endOfMonth,startOfWeek,endOfWeek,addDays,isSameDay, 
+  isSameMonth,subMonths,addMonths,startOfYear,endOfYear,eachMonthOfInterval,setMonth, 
+  setYear} from 'date-fns';
+import { fetchMoodRange, fetchUserStickers } from './api/api';
 
 // 색상 배열
 const colors = ['#FFABAB', '#FFC3A0', '#FFF58E', '#CDE6A5', '#ACD1EA', '#9FB1D9', '#C8BFE7'];
@@ -16,8 +19,8 @@ const saveToLocalStorage = (key, data) => {
   localStorage.setItem(key, JSON.stringify(data));
 };
 
-// 캘린더 헤더 렌더링
-const RenderHeader = memo(({ currentMonth, setCurrentMonth, isEditingMonth, setIsEditingMonth, isEditingYear, setIsEditingYear, inputMonth, setInputMonth, inputYear, setInputYear, handleMonthChange, handleYearChange }) => (
+// 달력 헤더 렌더링
+const RenderHeader = memo(({ currentMonth, setCurrentMonth, isEditingMonth, setIsEditingMonth, isEditingYear, setIsEditingYear, inputMonth, setInputMonth, inputYear, setInputYear, handleMonthChange, handleYearChange, toggleYearlyView, isYearlyView }) => (
   <div className="calendar-header">
     <button className="prev-button" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>◀</button>
     <div className="month-year-container">
@@ -26,8 +29,8 @@ const RenderHeader = memo(({ currentMonth, setCurrentMonth, isEditingMonth, setI
           type="number"
           value={inputYear}
           onChange={(e) => setInputYear(e.target.value)}
-          onBlur={handleYearChange}  // 호출
-          onKeyDown={(e) => e.key === 'Enter' && handleYearChange()}  // 호출
+          onBlur={handleYearChange}
+          onKeyDown={(e) => e.key === 'Enter' && handleYearChange()}
           autoFocus
           className="month-year-input"
         />
@@ -41,8 +44,8 @@ const RenderHeader = memo(({ currentMonth, setCurrentMonth, isEditingMonth, setI
           type="number"
           value={inputMonth}
           onChange={(e) => setInputMonth(e.target.value)}
-          onBlur={handleMonthChange}  // 호출
-          onKeyDown={(e) => e.key === 'Enter' && handleMonthChange()}  // 호출
+          onBlur={handleMonthChange}
+          onKeyDown={(e) => e.key === 'Enter' && handleMonthChange()}
           autoFocus
           className="month-year-input"
         />
@@ -53,6 +56,9 @@ const RenderHeader = memo(({ currentMonth, setCurrentMonth, isEditingMonth, setI
       )}
     </div>
     <button className="next-button" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>▶</button>
+    <button className="yearly-view-button" onClick={toggleYearlyView}>
+      {isYearlyView ? '월별 보기' : '연간 보기'}
+    </button>
   </div>
 ));
 
@@ -60,7 +66,7 @@ const RenderHeader = memo(({ currentMonth, setCurrentMonth, isEditingMonth, setI
 const RenderDays = memo(() => {
   const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   return (
-    <div className="days row">
+    <div className="days">
       {dayLabels.map((label, i) => (
         <div className="col" key={i}>
           {label}
@@ -115,156 +121,165 @@ const RenderCells = memo(({ currentMonth, moodColors, onDateClick, selectedDate,
   return <div className="body">{rows}</div>;
 });
 
+// 연간 보기 렌더링
+const RenderYearView = ({ currentYear, setCurrentYear, setCurrentMonth, toggleYearlyView }) => {
+  const yearStart = startOfYear(currentYear);
+  const yearEnd = endOfYear(currentYear);
+  const months = eachMonthOfInterval({ start: yearStart, end: yearEnd });
+
+  const handleMonthClick = (month) => {
+    setCurrentMonth(month);  // 클릭한 월로 이동
+    toggleYearlyView();  // 연간 보기 모드 종료
+  };
+
+  return (
+    <div className="year-view">
+      <div className="year-header">
+        <span>{format(currentYear, 'yyyy년')}</span>
+        <button onClick={toggleYearlyView}>월별 보기</button>
+      </div>
+      <div className="months-container">
+        {months.map(month => (
+          <div className="monthly-calendar" key={month.getMonth()} onClick={() => handleMonthClick(month)}>
+            {format(month, 'M월')}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// 메인 캘린더 컴포넌트
 function Calendar() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [currentYear, setCurrentYear] = useState(new Date());
+  const [moodColors, setMoodColors] = useState(loadFromLocalStorage('moodColors', {}));
+  const [stickers, setStickers] = useState(loadFromLocalStorage('stickers', []));
   const [selectedDate, setSelectedDate] = useState(null);
-  const [moodColors, setMoodColors] = useState(() => loadFromLocalStorage('moodColors', {}));
-  const [stickers, setStickers] = useState(() => loadFromLocalStorage('stickers', []));
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showStickerPicker, setShowStickerPicker] = useState(false);
-  const [isEditingMonth, setIsEditingMonth] = useState(false);
-  const [isEditingYear, setIsEditingYear] = useState(false);
   const [inputMonth, setInputMonth] = useState(format(currentMonth, 'M'));
   const [inputYear, setInputYear] = useState(format(currentMonth, 'yyyy'));
-
-  const token = localStorage.getItem('token');
+  const [isEditingMonth, setIsEditingMonth] = useState(false);
+  const [isEditingYear, setIsEditingYear] = useState(false);
+  const [isYearlyView, setIsYearlyView] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const startDate = format(startOfMonth(currentMonth), 'yyyy-MM-dd');
-        const endDate = format(endOfMonth(currentMonth), 'yyyy-MM-dd');
-        const colorsFromServer = await fetchMoodRange(startDate, endDate, token);
-
-        if (colorsFromServer) {
-          const moodData = colorsFromServer.moods.reduce((acc, mood) => {
-            acc[mood.date] = mood.color;
-            return acc;
-          }, {});
-          setMoodColors(moodData);
-          saveToLocalStorage('moodColors', moodData);
-        }
+        // Replace with your actual API calls
+        const moodData = await fetchMoodRange();
+        setMoodColors(moodData || {});
+        const stickerData = await fetchUserStickers();
+        setStickers(stickerData || []);
       } catch (error) {
-        console.error('Failed to fetch mood colors:', error.message);
-      }
-
-      try {
-        const stickersFromServer = await fetchUserStickers(token);
-        setStickers(stickersFromServer.stickers || []);
-        saveToLocalStorage('stickers', stickersFromServer.stickers || []);
-      } catch (error) {
-        console.error('Failed to fetch stickers:', error.message);
-        setStickers([]);
-        saveToLocalStorage('stickers', []);
+        console.error('Failed to fetch data:', error.message);
       }
     };
 
     fetchData();
-  }, [currentMonth, token]);
+  }, [currentMonth]);
 
-  const goToToday = () => setCurrentMonth(startOfMonth(new Date()));
-
-  const onDateClick = (day) => {
-    if (!isAfter(day, new Date())) {
-      setSelectedDate(day);
-      setShowColorPicker(true);
-    }
+  const handleDateClick = (date) => {
+    setSelectedDate(date);
+    setShowColorPicker(true);  // 색상 선택기 표시
   };
 
-  const handleColorClick = async (color) => {
+  const handleColorChange = (color) => {
     if (selectedDate) {
-      const dateKey = format(selectedDate, 'yyyy-MM-dd');
-      const newMoodColors = { ...moodColors, [dateKey]: color };
-      setMoodColors(newMoodColors);
-      saveToLocalStorage('moodColors', newMoodColors);
-
-      try {
-        await setMoodColor(dateKey, color, token);
-      } catch (error) {
-        console.error('Failed to save mood color:', error.message);
-      }
-      setShowStickerPicker(true);
+      const updatedMoodColors = { ...moodColors, [format(selectedDate, 'yyyy-MM-dd')]: color };
+      setMoodColors(updatedMoodColors);
+      saveToLocalStorage('moodColors', updatedMoodColors);
     }
+    setShowColorPicker(false);
   };
 
-  const handleStickerClick = async (stickerId) => {
+  const handleStickerChange = (sticker) => {
     if (selectedDate) {
-      const dateKey = format(selectedDate, 'yyyy-MM-dd');
-      try {
-        await addToCalendar(dateKey, moodColors[dateKey] || 'transparent', stickerId, token);
-        alert('Sticker added to the date!');
-      } catch (error) {
-        console.error('Failed to add sticker:', error.message);
-      }
-      setShowColorPicker(false);
-      setShowStickerPicker(false);
+      const updatedStickers = [...stickers, { ...sticker, date: format(selectedDate, 'yyyy-MM-dd') }];
+      setStickers(updatedStickers);
+      saveToLocalStorage('stickers', updatedStickers);
     }
+    setShowStickerPicker(false);
   };
 
   const handleMonthChange = () => {
-    const newMonth = parseInt(inputMonth, 10);
-    if (newMonth >= 1 && newMonth <= 12) {
-      setCurrentMonth(setMonth(currentMonth, newMonth - 1));
-      setIsEditingMonth(false);
-    }
+    setCurrentMonth(setMonth(currentMonth, parseInt(inputMonth, 10) - 1));
+    setIsEditingMonth(false);
   };
 
   const handleYearChange = () => {
-    const newYear = parseInt(inputYear, 10);
-    if (newYear >= 1900) {
-      setCurrentMonth(setYear(currentMonth, newYear));
-      setIsEditingYear(false);
-    }
+    setCurrentYear(setYear(currentYear, parseInt(inputYear, 10)));
+    setCurrentMonth(setYear(setMonth(currentMonth, format(currentMonth, 'M') - 1), parseInt(inputYear, 10)));
+    setIsEditingYear(false);
+  };
+
+  const toggleYearlyView = () => {
+    setIsYearlyView(!isYearlyView);
   };
 
   return (
-    <div className="calendar">
-      <RenderHeader
-        currentMonth={currentMonth}
-        setCurrentMonth={setCurrentMonth}
-        isEditingMonth={isEditingMonth}
-        setIsEditingMonth={setIsEditingMonth}
-        isEditingYear={isEditingYear}
-        setIsEditingYear={setIsEditingYear}
-        inputMonth={inputMonth}
-        setInputMonth={setInputMonth}
-        inputYear={inputYear}
-        setInputYear={setInputYear}
-        handleMonthChange={handleMonthChange}  // 전달
-        handleYearChange={handleYearChange}    // 전달
-      />
-      <RenderDays />
-      <RenderCells 
-        currentMonth={currentMonth} 
-        moodColors={moodColors} 
-        onDateClick={onDateClick} 
-        selectedDate={selectedDate}
-        stickers={stickers}
-      />
+    <div className="calendar-container">
+      {isYearlyView ? (
+        <RenderYearView
+          currentYear={currentYear}
+          setCurrentYear={setCurrentYear}
+          setCurrentMonth={setCurrentMonth}
+          toggleYearlyView={toggleYearlyView}
+        />
+      ) : (
+        <>
+          <RenderHeader
+            currentMonth={currentMonth}
+            setCurrentMonth={setCurrentMonth}
+            isEditingMonth={isEditingMonth}
+            setIsEditingMonth={setIsEditingMonth}
+            isEditingYear={isEditingYear}
+            setIsEditingYear={setIsEditingYear}
+            inputMonth={inputMonth}
+            setInputMonth={setInputMonth}
+            inputYear={inputYear}
+            setInputYear={setInputYear}
+            handleMonthChange={handleMonthChange}
+            handleYearChange={handleYearChange}
+            toggleYearlyView={toggleYearlyView}
+            isYearlyView={isYearlyView}
+          />
+          <RenderDays />
+          <RenderCells
+            currentMonth={currentMonth}
+            moodColors={moodColors}
+            onDateClick={handleDateClick}
+            selectedDate={selectedDate}
+            stickers={stickers}
+          />
+        </>
+      )}
       {showColorPicker && (
         <div className="color-picker">
-          <div className="color-options">
-            {colors.map((color, index) => (
-              <div
-                key={index}
-                className="color-option"
-                style={{ backgroundColor: color }}
-                onClick={() => handleColorClick(color)}
-              />
-            ))}
-          </div>
-          {showStickerPicker && (
-            <div className="sticker-picker">
-              {stickers.map((sticker) => (
-                <div key={sticker.sticker_id} className="sticker-option" onClick={() => handleStickerClick(sticker.sticker_id)}>
-                  <img src={sticker.image_url} alt={sticker.name} />
-                </div>
-              ))}
-            </div>
-          )}
+          {colors.map(color => (
+            <div
+              key={color}
+              className="color-option"
+              style={{ backgroundColor: color }}
+              onClick={() => handleColorChange(color)}
+            />
+          ))}
         </div>
       )}
-      <button onClick={goToToday} className="today-button">Today</button>
+      {showStickerPicker && (
+        <div className="sticker-picker">
+          {/* 스티커 선택기 UI 구현 */}
+          <button onClick={() => setShowStickerPicker(false)}>닫기</button>
+          {/* 예제 스티커 옵션 */}
+          <div className="sticker-option" onClick={() => handleStickerChange({ sticker_id: '1', image_url: 'path/to/sticker1.png', name: 'Sticker 1' })}>
+            Sticker 1
+          </div>
+          <div className="sticker-option" onClick={() => handleStickerChange({ sticker_id: '2', image_url: 'path/to/sticker2.png', name: 'Sticker 2' })}>
+            Sticker 2
+          </div>
+        </div>
+      )}
     </div>
   );
 }

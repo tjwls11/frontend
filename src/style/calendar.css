@@ -1,367 +1,148 @@
-/* 전체 배경 색상 설정 */
-body {
-    background-color: #FFFBE6;
-}
-
-/* 캘린더 컨테이너 */
 .calendar-container {
-    width: 80%;
-    margin: 50px auto 0;
+    font-family: Arial, sans-serif;
+    margin: 20px;
     position: relative;
-}
-
-/* 전체 캘린더 */
-.calendar {
-    width: 100%;
-    background-color: #ffffff;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-}
-
-/* 헤더 섹션 */
-.calendar-header {
+  }
+  
+  .calendar-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 10px 20px;
+    justify-content: space-between;
     margin-bottom: 10px;
-}
-
-/* 년도와 월을 감싸는 컨테이너 */
-.month-year-container {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-/* 년도와 월 텍스트 */
-.month-year {
-    font-weight: 600;
-    font-size: 1.2em;
-    cursor: pointer;
-    color: #0d4225;
-}
-
-/* 년도와 월 입력 필드 */
-.month-year-input {
-    width: 65px;
-    height: 30px;
-    font-size: 1em;
-    text-align: center;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-}
-
-/* 이동 버튼 */
-.prev-button, .next-button {
-    cursor: pointer;
-    background: none;
-    border: none;
-    font-size: 1.5em;
-    color: #0d4225;
-}
-
-/* 요일 헤더 */
-.days {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-weight: 600;
-    font-size: 0.65em;
-    padding: 5px;
-    color: #FFFBE6;
-    background-color: rgb(87, 140, 111);
-}
-
-/* 요일 셀 */
-.days .col {
-    width: 14%;
-    height: 50px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 1.2em;
-}
-
-/* 본문 내의 행 */
-.body .row {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-/* 캘린더 셀 */
-.body .col {
-    width: 14%;
-    height: 80px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 0.8em;
-    border-radius: 3px;
-    background: #FFFBE6;
-    margin: 2px;
-}
-
-/* 선택된 셀 스타일 */
-.cell.selected {
-    border: 1px solid #0d4225;
-}
-
-/* 유효한 셀 클릭 시 커서 스타일 */
-.cell.valid {
-    cursor: pointer;
-}
-
-/* 비활성화된 셀 스타일 */
-.cell.disabled {
-    opacity: 0.5;
-}
-
-/* 사이드바 스타일 */
-.sidebar {
-    position: fixed;
-    bottom: 20px;
-    left: 20px;
-    width: 50px;
-    height: 50px;
-    background: #ffffff;
-    border-radius: 50%;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    transition: transform 0.3s ease, width 0.3s ease, height 0.3s ease, box-shadow 0.3s ease, border-radius 0.3s ease;
-    z-index: 1000;
-}
-
-/* 사이드바 열린 상태 */
-.sidebar.open {
-    width: 200px;
-    height: 150px;
-    border-radius: 10px;
-    transform: translateX(0) translateY(0);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
-    color: #0d4225;
-}
-
-/* 사이드바 닫힘 상태 */
-.sidebar.closed {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    color: #0d4225;
-}
-
-/* 사이드바 열린 상태에서 내용 보이기 */
-.sidebar.open .sidebar-content {
-    opacity: 1;
-    visibility: visible;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
-}
-
-/* 사이드바 닫힌 상태에서 내용 숨기기 */
-.sidebar.closed .sidebar-content {
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
-}
-
-/* 사이드바 아이콘 */
-.sidebar-icon {
-    font-size: 24px;
-    color: #333;
-    transition: opacity 0.3s ease;
-}
-
-/* 사이드바 버튼 */
-.sidebar-button {
-    background: #ffffff;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    padding: 10px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    margin: 5px 0;
-    cursor: pointer;
-}
-
-/* 사이드바 내용 */
-.sidebar-content {
-    display: flex;
-    flex-direction: column;
-    padding: 10px;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
-}
-
-/* 닫기 버튼 */
-.close-button, .sidebar-content .material-symbols-outlined {
+  }
+  
+  .prev-button, .next-button, .yearly-view-button {
     background: none;
     border: none;
     font-size: 18px;
     cursor: pointer;
-    position: absolute;
-    bottom: 5px;
-    left: 7px;
-    margin-bottom: 10px;
-}
-
-/* 사이드바 아이콘 */
-.sidebar-icon {
+  }
+  
+  .month-year-container {
     display: flex;
-    justify-content: center;
     align-items: center;
-    font-size: 24px;
-    color: #333;
-    transition: opacity 0.3s ease;
-}
-
-/* 연간 달력 보기 스타일 */
-.yearly-view {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-/* 연간 달력의 월별 달력 헤더 */
-.monthly-calendar-header {
-    font-weight: 600;
-    margin-bottom: 10px;
-}
-
-/* 연간 달력의 월별 달력 본문 */
-.monthly-calendar-body {
-    display: flex;
-    flex-wrap: wrap;
-}
-
-/* 연간 달력의 월별 셀 스타일 */
-.monthly-calendar-cell {
-    width: 14%;
-    height: 40px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border-radius: 5px;
-    margin: 1px;
-    background-color: #ffffff;
-}
-
-/* 년도와 월 표시 텍스트 스타일 */
-.month-year {
-    font-size: 1.2em;
+    gap: 10px;
+  }
+  
+  .month-year {
     cursor: pointer;
-}
-
-/* 일반 열 스타일 */
-.col {
+  }
+  
+  .month-year-input {
+    width: 60px;
+    text-align: center;
+  }
+  
+  .days {
     display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 5px;
-    width: 14.2%;
-    box-sizing: border-box;
-}
-
-/* 셀 기본 스타일 */
-.cell {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 5px;
-    height: 50px;
-    cursor: pointer;
-}
-
-/* 비활성화된 셀 스타일 */
-.cell.disabled {
-    background-color: #f0f0f0;
-    cursor: not-allowed;
-}
-
-/* 선택된 셀 스타일 */
-.cell.selected {
-    border: 2px solid #0d4225;
-}
-
-/* 유효한 셀 스타일 */
-.cell.valid {
-    background-color: #FFFBE6;
-}
-
-/* 일반 텍스트 스타일 */
-.text {
-    font-size: 1em;
-}
-
-/* 유효하지 않은 텍스트 스타일 */
-.not-valid {
-    color: #ccc;
-}
-
-/* 연간 뷰 스타일 */
-.year-view {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-/* 연간 뷰 헤더 스타일 */
-.year-header {
-    display: flex;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-/* 연간 뷰에서 년도 표시 텍스트 스타일 */
-.year-display {
-    font-size: 1.5em;
-    margin: 0 20px;
-}
-
-/* 월별 박스 컨테이너 */
-.months-container {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-}
-
-/* 월별 박스 스타일 */
-.month-box {
-    width: 200px;
-    margin: 10px;
+    font-weight: bold;
+  }
+  
+  .col {
+    flex: 1;
+    text-align: center;
     padding: 10px;
-    background-color: #ffffff;
-    border: 1px solid #ccc;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
-}
-
-/* 월별 박스 헤더 */
-.month-box-header {
-    font-weight: 600;
-    margin-bottom: 10px;
-}
-
-/* 월별 박스 내용 */
-.month-box-content {
+  }
+  
+  .body {
     display: flex;
     flex-wrap: wrap;
-}
-
-/* 각 월별 셀 */
-.month-box-cell {
-    width: 14%;
-    height: 40px;
+  }
+  
+  .row {
     display: flex;
-    justify-content: center;
+    width: 100%;
+  }
+  
+  .cell {
+    flex: 1;
+    aspect-ratio: 1; /* Ensures that cells are square */
+    display: flex;
     align-items: center;
-    border-radius: 5px;
-    margin: 2px;
-    background-color: #FFFBE6;
-}
+    justify-content: center;
+    cursor: pointer;
+    border: 1px solid #ddd;
+    position: relative;
+  }
+  
+  .cell.disabled {
+    color: #ccc;
+  }
+  
+  .cell.today {
+    border: 2px solid #000;
+  }
+  
+  .cell.selected {
+    border: 2px solid #f00;
+  }
+  
+  .cell.valid {
+    border: 1px solid #ddd;
+  }
+  
+  .sticker {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 50%;
+  }
+  
+  .color-picker {
+    position: absolute;
+    bottom: 60px;
+    left: 20px;
+    display: flex;
+    gap: 10px;
+  }
+  
+  .color-option {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+  
+  .sticker-picker {
+    position: absolute;
+    bottom: 100px;
+    left: 20px;
+    background: white;
+    padding: 10px;
+    border: 1px solid #ddd;
+  }
+  
+  .sticker-option {
+    padding: 5px;
+    cursor: pointer;
+  }
+  
+  .year-view {
+    padding: 10px;
+  }
+  
+  .year-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .months-container {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  
+  .monthly-calendar {
+    width: 100px;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: 1px solid #ddd;
+    margin: 5px;
+  }
+  
