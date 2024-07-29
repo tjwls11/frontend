@@ -1,60 +1,63 @@
+/* Calendar.css */
 .calendar-container {
     font-family: Arial, sans-serif;
     margin: 20px;
     position: relative;
-  }
-  
-  .calendar-header {
+}
+
+.calendar-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     margin-bottom: 10px;
-  }
-  
-  .prev-button, .next-button, .yearly-view-button {
+}
+
+.prev-button,
+.next-button,
+.yearly-view-button {
     background: none;
     border: none;
     font-size: 18px;
     cursor: pointer;
-  }
-  
-  .month-year-container {
+}
+
+.month-year-container {
     display: flex;
     align-items: center;
     gap: 10px;
-  }
-  
-  .month-year {
+}
+
+.month-year {
     cursor: pointer;
-  }
-  
-  .month-year-input {
+}
+
+.month-year-input {
     width: 60px;
     text-align: center;
-  }
-  
-  .days {
+}
+
+.days {
     display: flex;
     font-weight: bold;
-  }
-  
-  .col {
+}
+
+.col {
     flex: 1;
     text-align: center;
     padding: 10px;
-  }
-  
-  .body {
+}
+
+.body {
     display: flex;
     flex-wrap: wrap;
-  }
-  
-  .row {
+}
+
+.row {
     display: flex;
     width: 100%;
-  }
-  
-  .cell {
+}
+
+.cell {
     flex: 1;
     aspect-ratio: 1; /* Ensures that cells are square */
     display: flex;
@@ -63,25 +66,25 @@
     cursor: pointer;
     border: 1px solid #ddd;
     position: relative;
-  }
-  
-  .cell.disabled {
+}
+
+.cell.disabled {
     color: #ccc;
-  }
-  
-  .cell.today {
+}
+
+.cell.today {
     border: 2px solid #000;
-  }
-  
-  .cell.selected {
+}
+
+.cell.selected {
     border: 2px solid #f00;
-  }
-  
-  .cell.valid {
+}
+
+.cell.valid {
     border: 1px solid #ddd;
-  }
-  
-  .sticker {
+}
+
+.sticker {
     position: absolute;
     bottom: 2px;
     right: 2px;
@@ -89,53 +92,53 @@
     height: 20px;
     background: white;
     border-radius: 50%;
-  }
-  
-  .color-picker {
+}
+
+.color-picker {
     position: absolute;
     bottom: 60px;
     left: 20px;
     display: flex;
     gap: 10px;
-  }
-  
-  .color-option {
+}
+
+.color-option {
     width: 30px;
     height: 30px;
     border-radius: 50%;
     cursor: pointer;
-  }
-  
-  .sticker-picker {
+}
+
+.sticker-picker {
     position: absolute;
     bottom: 100px;
     left: 20px;
     background: white;
     padding: 10px;
     border: 1px solid #ddd;
-  }
-  
-  .sticker-option {
+}
+
+.sticker-option {
     padding: 5px;
     cursor: pointer;
-  }
-  
-  .year-view {
+}
+
+.year-view {
     padding: 10px;
-  }
-  
-  .year-header {
+}
+
+.year-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-  }
-  
-  .months-container {
+}
+
+.months-container {
     display: flex;
     flex-wrap: wrap;
-  }
-  
-  .monthly-calendar {
+}
+
+.monthly-calendar {
     width: 100px;
     height: 100px;
     display: flex;
@@ -144,5 +147,44 @@
     cursor: pointer;
     border: 1px solid #ddd;
     margin: 5px;
-  }
-  
+}
+
+.monthly-calendar-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+}
+
+.day-circle {
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.calendar-icon {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    width: 50px;
+    height: 50px;
+    background-color: #ffffff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    font-size: 24px;
+    color: #000;
+    transition: background-color 0.3s;
+}
+
+.calendar-icon:hover {
+    background-color: #f0f0f0;
+}
