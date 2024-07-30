@@ -4,13 +4,16 @@ import {
     endOfMonth, startOfWeek, endOfWeek, addDays, isAfter, setMonth,
     setYear, startOfYear, endOfYear, eachMonthOfInterval, addYears, subYears
 } from 'date-fns';
+import { addToCalendar } from './api/api'; // API 파일 경로에 맞게 수정하세요
 
 function Calendar() {
-    const colors = ['','#FFABAB', '#FFC3A0', '#FFF58E', '#CDE6A5','#ACD1EA','#9FB1D9','#C8BFE7'];
+    const colors = ['#FFABAB', '#FFC3A0', '#FFF58E', '#CDE6A5','#ACD1EA','#9FB1D9','#C8BFE7'];
     const [currentMonth, setCurrentMonth] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState(null);
     const [moodColors, setMoodColors] = useState({});
+    const [moodStickers, setMoodStickers] = useState({});
     const [showColorPicker, setShowColorPicker] = useState(false);
+    const [showStickerPicker, setShowStickerPicker] = useState(false);
     const [today, setToday] = useState(new Date());
     const [isEditingMonth, setIsEditingMonth] = useState(false);
     const [isEditingYear, setIsEditingYear] = useState(false);
@@ -20,18 +23,30 @@ function Calendar() {
     const [isYearlyView, setIsYearlyView] = useState(false);
     const [currentYear, setCurrentYear] = useState(new Date());
     const [isEditingYearInYearlyView, setIsEditingYearInYearlyView] = useState(false);
+    const [userStickers, setUserStickers] = useState([]);
 
     useEffect(() => {
-        setToday(new Date());
-        // 페이지 로드 시 로컬 스토리지에서 색상 정보를 가져옴
-        const storedMoodColors = JSON.parse(localStorage.getItem('moodColors')) || {};
-        setMoodColors(storedMoodColors);
+        const stickersFromLocalStorage = localStorage.getItem('userStickers');
+        if (stickersFromLocalStorage) {
+            setUserStickers(JSON.parse(stickersFromLocalStorage));
+        }
     }, []);
 
     useEffect(() => {
-        // 색상 정보가 변경될 때마다 로컬 스토리지에 저장
+        setToday(new Date());
+        const storedMoodColors = JSON.parse(localStorage.getItem('moodColors')) || {};
+        const storedMoodStickers = JSON.parse(localStorage.getItem('moodStickers')) || {};
+        setMoodColors(storedMoodColors);
+        setMoodStickers(storedMoodStickers);
+    }, []);
+
+    useEffect(() => {
         localStorage.setItem('moodColors', JSON.stringify(moodColors));
     }, [moodColors]);
+
+    useEffect(() => {
+        localStorage.setItem('moodStickers', JSON.stringify(moodStickers));
+    }, [moodStickers]);
 
     const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
     const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
@@ -46,17 +61,40 @@ function Calendar() {
         if (!isAfter(day, today)) {
             setSelectedDate(day);
             setShowColorPicker(true);
+            setShowStickerPicker(true);
         }
     };
 
-    const handleColorClick = (color) => {
+    const handleColorClick = async (color) => {
         if (selectedDate) {
+            const dateStr = format(selectedDate, 'yyyy-MM-dd');
             setMoodColors(prevColors => ({
                 ...prevColors,
-                [format(selectedDate, 'yyyy-MM-dd')]: color,
+                [dateStr]: color,
             }));
+            try {
+                await addToCalendar(dateStr, color, moodStickers[dateStr]?.sticker_id);
+            } catch (error) {
+                console.error('색상 저장 중 오류 발생', error);
+            }
         }
         setShowColorPicker(false);
+    };
+
+    const handleStickerClick = async (sticker) => {
+        if (selectedDate) {
+            const dateStr = format(selectedDate, 'yyyy-MM-dd');
+            setMoodStickers(prevStickers => ({
+                ...prevStickers,
+                [dateStr]: sticker,
+            }));
+            try {
+                await addToCalendar(dateStr, moodColors[dateStr] || 'transparent', sticker.sticker_id);
+            } catch (error) {
+                console.error('스티커 저장 중 오류 발생', error);
+            }
+        }
+        setShowStickerPicker(false);
     };
 
     const handleMonthChange = () => {
@@ -130,37 +168,37 @@ function Calendar() {
     );
 
     const RenderDays = () => {
-        const days = [];
         const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-        for (let i = 0; i < 7; i++) {
-            days.push(
-                <div className="col" key={i}>
-                    {dayLabels[i]}
-                </div>
-            );
-        }
-
-        return <div className="days row">{days}</div>;
+        return (
+            <div className="days row">
+                {dayLabels.map((label, i) => (
+                    <div className="col" key={i}>
+                        {label}
+                    </div>
+                ))}
+            </div>
+        );
     };
 
-    const RenderCells = ({ currentMonth, moodColors, onDateClick }) => {
+    const RenderCells = ({ currentMonth, moodColors, moodStickers, onDateClick }) => {
         const monthStart = startOfMonth(currentMonth);
         const monthEnd = endOfMonth(monthStart);
         const startDate = startOfWeek(monthStart);
         const endDate = endOfWeek(monthEnd);
-    
+
         const rows = [];
         let day = startDate;
-    
+
         while (day <= endDate) {
             const days = [];
-    
+
             for (let i = 0; i < 7; i++) {
                 const currentDay = day;
                 const dayKey = format(currentDay, 'yyyy-MM-dd');
                 const dayColor = moodColors[dayKey] || 'transparent';
-    
+                const daySticker = moodStickers[dayKey];
+
                 days.push(
                     <div
                         className={`col cell ${
@@ -183,9 +221,16 @@ function Calendar() {
                         }>
                             {format(currentDay, 'd')}
                         </span>
+                        {daySticker && (
+                            <img
+                                src={daySticker.image_url}
+                                alt={daySticker.name}
+                                className="sticker-icon"
+                            />
+                        )}
                     </div>
                 );
-    
+
                 day = addDays(day, 1);
             }
             rows.push(
@@ -196,71 +241,54 @@ function Calendar() {
         }
         return <div className="body">{rows}</div>;
     };
-    
-    const RenderMiniMonth = ({ month, moodColors, onMonthClick }) => {
-        const monthStart = startOfMonth(month);
-        const monthEnd = endOfMonth(month);
-        const startDate = startOfWeek(monthStart);
-        const endDate = endOfWeek(monthEnd);
 
-        const rows = [];
+    const RenderMiniMonth = ({ month, moodColors, moodStickers }) => {
+        const startDate = startOfMonth(month);
+        const endDate = endOfMonth(startDate);
+        const days = [];
         let day = startDate;
 
         while (day <= endDate) {
-            const days = [];
-            for (let i = 0; i < 7; i++) {
-                const currentDay = day;
-                const dayKey = format(currentDay, 'yyyy-MM-dd');
-                const dayColor = moodColors[dayKey] || 'transparent';
+            const dayKey = format(day, 'yyyy-MM-dd');
+            const dayColor = moodColors[dayKey] || 'transparent';
+            const daySticker = moodStickers[dayKey];
 
-                days.push(
-                    <div
-                        className={`monthly-calendar-cell ${
-                            !isSameMonth(currentDay, monthStart) ? 'disabled' : ''
-                        } ${
-                            isSameDay(currentDay, today) ? 'today' : ''
-                        }`}
-                        key={dayKey}
-                        onClick={() => onMonthClick(month)}
-                    >
-                        <div className="day-circle" style={{ backgroundColor: dayColor }}>
-                            {format(currentDay, 'd')}
-                        </div>
-                    </div>
-                );
-                day = addDays(day, 1);
-            }
-            rows.push(
-                <div className="row" key={format(day, 'yyyy-MM-dd')}>
-                    {days}
+            days.push(
+                <div
+                    key={dayKey}
+                    className={`mini-cell ${isSameDay(day, today) ? 'today' : ''}`}
+                    style={{ backgroundColor: dayColor }}
+                >
+                    {daySticker && (
+                        <img
+                            src={daySticker.image_url}
+                            alt={daySticker.name}
+                            className="sticker-icon-mini"
+                        />
+                    )}
                 </div>
             );
+            day = addDays(day, 1);
         }
 
         return (
-            <div className="monthly-calendar" onClick={() => onMonthClick(month)}>
-                <div className="month-box">
-                    <div className="month-title">{format(month, 'M월')}</div>
-                    {rows}
-                </div>
+            <div className="mini-month">
+                <div className="mini-month-header">{format(month, 'MMM yyyy')}</div>
+                <div className="mini-month-body">{days}</div>
             </div>
         );
     };
 
-    const RenderYearView = ({ currentYear, moodColors }) => {
-        const yearStart = startOfYear(currentYear);
-        const yearEnd = endOfYear(currentYear);
-        const months = eachMonthOfInterval({ start: yearStart, end: yearEnd });
-
-        const handleMonthClick = (month) => {
-            setCurrentMonth(month);
-            setIsYearlyView(false);
-        };
+    const RenderYearView = ({ currentYear, moodColors, moodStickers }) => {
+        const months = eachMonthOfInterval({
+            start: startOfYear(currentYear),
+            end: endOfYear(currentYear)
+        });
 
         return (
             <div className="year-view">
-                <div className="year-header">
-                    <button onClick={prevYear} className="prev-button">◀</button>
+                <button className="prev-year-button" onClick={prevYear}>◀</button>
+                <div className="year-view-header">
                     {isEditingYearInYearlyView ? (
                         <input
                             type="number"
@@ -272,29 +300,54 @@ function Calendar() {
                             className="year-input"
                         />
                     ) : (
-                        <span className="year-display" onClick={() => setIsEditingYearInYearlyView(true)}>
-                            {format(currentYear, 'yyyy년')}
+                        <span className="year-text" onClick={() => setIsEditingYearInYearlyView(true)}>
+                            {format(currentYear, 'yyyy')}
                         </span>
                     )}
-                    <button onClick={nextYear} className="next-button">▶</button>
                 </div>
-                <div className="months-container">
+                <div className="year-months">
                     {months.map((month, index) => (
-                        <RenderMiniMonth
-                            key={index}
-                            month={month}
-                            moodColors={moodColors}
-                            onMonthClick={handleMonthClick}
-                        />
+                        <RenderMiniMonth key={index} month={month} moodColors={moodColors} moodStickers={moodStickers} />
                     ))}
                 </div>
+                <button className="next-year-button" onClick={nextYear}>▶</button>
             </div>
         );
     };
 
+    const RenderColorAndStickerPicker = () => (
+        <div className="color-sticker-picker">
+            <div className={`color-picker ${showColorPicker ? 'visible' : ''}`}>
+                {colors.map(color => (
+                    <div
+                        key={color}
+                        className="color-option"
+                        style={{ backgroundColor: color }}
+                        onClick={() => handleColorClick(color)}
+                    />
+                ))}
+            </div>
+            <div className={`sticker-picker ${showStickerPicker ? 'visible' : ''}`}>
+                {userStickers.map(sticker => (
+                    <div
+                        key={sticker.sticker_id}
+                        className="sticker-option"
+                        onClick={() => handleStickerClick(sticker)}
+                    >
+                        <img src={sticker.image_url} alt={sticker.name} className="sticker-image" />
+                        <div className="sticker-info">
+                            <span>{sticker.name}</span>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
-    const handleYearlyViewClick = () => setIsYearlyView(true);
+
     const handleCurrentViewClick = () => setIsYearlyView(false);
+    const handleYearlyViewClick = () => setIsYearlyView(true);
 
     return (
         <div className="calendar-container">
@@ -325,25 +378,15 @@ function Calendar() {
                         <RenderCells
                             currentMonth={currentMonth}
                             moodColors={moodColors}
+                            moodStickers={moodStickers}
                             onDateClick={onDateClick}
                         />
                     </div>
                 </>
             ) : (
-                <RenderYearView currentYear={currentYear} moodColors={moodColors} />
+                <RenderYearView currentYear={currentYear} moodColors={moodColors} moodStickers={moodStickers} />
             )}
-            {showColorPicker && (
-                <div className="color-picker">
-                    {colors.map(color => (
-                        <div
-                            key={color}
-                            className="color-option"
-                            style={{ backgroundColor: color }}
-                            onClick={() => handleColorClick(color)}
-                        />
-                    ))}
-                </div>
-            )}
+            {(showColorPicker || showStickerPicker) && <RenderColorAndStickerPicker />}
         </div>
     );
 }
