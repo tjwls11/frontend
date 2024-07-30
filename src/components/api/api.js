@@ -39,16 +39,27 @@ export const setMoodColor = async (date, color, token) => {
   }
 };
 
-// 달력에 추가
-export const addToCalendar = async (date, color, stickerId, token) => {
+// 캘린더에 이벤트 추가
+export const addToCalendar = async (eventData, token) => {
   try {
-    await axios.post(`${API_URL}/api/calendar`, { date, color, stickerId }, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    // eventData가 객체인지 확인
+    if (typeof eventData !== 'object' || eventData === null) {
+      throw new Error('eventData는 객체여야 합니다.');
+    }
+
+    // 필수 필드 확인
+    const { date, color } = eventData;
+    if (!date || !color) {
+      throw new Error('필수 필드가 누락되었습니다: date와 color를 제공해야 합니다.');
+    }
+
+    const response = await axios.post(`${API_URL}/api/calendar`, eventData, getAuthHeaders(token));
+    console.log('Event added to calendar:', response.data);
   } catch (error) {
-    console.error('달력에 추가하는 중 오류가 발생했습니다.', error);
+    console.error('Error adding event to calendar:', error.message);
+    if (error.response && error.response.status === 403) {
+      console.error('Access denied: You do not have permission to perform this action.');
+    }
   }
 };
 
@@ -72,6 +83,7 @@ export const changePassword = async (currentPassword, newPassword, token) => {
     handleError('비밀번호 변경 중 오류가 발생했습니다.', error);
   }
 };
+
 
 // 다이어리 추가
 export const addDiary = async (date, title, content, one, token) => {
