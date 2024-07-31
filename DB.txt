@@ -10,14 +10,15 @@ CREATE TABLE `calendar` (
   `id` int NOT NULL AUTO_INCREMENT,
   `user_id` varchar(255) NOT NULL,
   `date` date NOT NULL,
-  `color` varchar(7) NOT NULL,
+  `color` varchar(7) DEFAULT NULL,
   `sticker_id` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `user_id` (`user_id`,`date`),
-  KEY `sticker_id` (`sticker_id`),
+  KEY `fk_calendar_sticker` (`sticker_id`),
   CONSTRAINT `calendar_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE,
-  CONSTRAINT `calendar_ibfk_2` FOREIGN KEY (`sticker_id`) REFERENCES `stickers` (`sticker_id`)
-) 
+  CONSTRAINT `calendar_ibfk_2` FOREIGN KEY (`sticker_id`) REFERENCES `stickers` (`sticker_id`),
+  CONSTRAINT `fk_calendar_sticker` FOREIGN KEY (`sticker_id`) REFERENCES `stickers` (`sticker_id`)
+)
 
 CREATE TABLE `stickers` (
   `sticker_id` int NOT NULL AUTO_INCREMENT,
