@@ -5,7 +5,7 @@ import {
     isAfter
 } from 'date-fns';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { setMoodColor, fetchUserStickers } from './api/api'; 
+import { setMoodColor, fetchUserStickers, fetchUserCalendar,applySticker  } from './api/api'; 
 
 function Calendar() {
     // Mood colors used to color-code dates
@@ -28,6 +28,42 @@ function Calendar() {
     const [userStickers, setUserStickers] = useState([]); // User's stickers
 
     const token = localStorage.getItem('token'); // Authentication token from local storage
+    
+    // Fetch user calendar data and stickers on component mount
+    useEffect(() => {
+        const initializeCalendar = async () => {
+            try {
+                // 캘린더 데이터 가져오기
+                const calendarData = await fetchUserCalendar();
+                console.log('Received calendar data:', calendarData);
+    
+                if (calendarData.isSuccess) {
+                    // 데이터 로드 성공
+                    // 데이터 처리 로직을 추가
+                } else {
+                    console.error('캘린더 데이터 조회 실패:', calendarData.message);
+                }
+            } catch (error) {
+                console.error('Error initializing calendar data:', error);
+            }
+        };
+    
+        // 사용자 스티커 로드
+        const loadUserStickers = async () => {
+            try {
+                if (!token) throw new Error('Token not provided.');
+                const ownedStickers = await fetchUserStickers(token);
+                setUserStickers(ownedStickers || []);
+            } catch (error) {
+                console.error('Error fetching user stickers:', error);
+            }
+        };
+    
+        initializeCalendar();
+        loadUserStickers();
+    }, [token]);
+    
+    
 
     // Load mood colors and stickers from local storage and fetch user stickers on component mount
     useEffect(() => {
@@ -48,6 +84,12 @@ function Calendar() {
         };
         loadUserStickers();
     }, [token]); // Dependency on token, so effect runs when token changes
+
+    // Save mood colors and stickers to local storage when they change
+    useEffect(() => {
+        localStorage.setItem('moodColors', JSON.stringify(moodColors));
+        localStorage.setItem('stickers', JSON.stringify(stickers));
+    }, [moodColors, stickers]);
 
     // Navigate to previous month
     const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
@@ -84,21 +126,24 @@ function Calendar() {
         }
     };
 
-    // Handle adding a sticker to the selected date
     const handleStickerAdd = async (stickerId) => {
         if (selectedDate) {
-            const dateStr = format(selectedDate, 'yyyy-MM-dd'); // Format date for key
+            const dateStr = format(selectedDate, 'yyyy-MM-dd'); // 날짜 형식 지정
             setStickers(prevStickers => ({
                 ...prevStickers,
                 [dateStr]: stickerId,
             }));
+    
             try {
-                console.log('Sticker added to server'); // Log success
+                const result = await applySticker(stickerId, dateStr, token);
+                console.log('Sticker added to server:', result); // 성공적으로 추가된 스티커 정보 출력
             } catch (error) {
-                console.error('Error adding sticker:', error); // Log any errors
+                console.error('Error adding sticker:', error); // 에러 로그
             }
         }
     };
+    
+    
 
     // Handle removing a sticker from the selected date
     const handleStickerRemove = async () => {

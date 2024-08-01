@@ -288,9 +288,9 @@ app.get('/get-user-stickers', authenticateToken, async (req, res) => {
 
 
 //캘린더
-// 캘린더: 특정 날짜의 무드 색상 설정 엔드포인트
+// 캘린더: 특정 날짜의 무드 색상과 스티커 설정 엔드포인트
 app.post('/set-mood-color', authenticateToken, async (req, res) => {
-  const { date, color } = req.body;
+  const { date, color, sticker_id } = req.body;
   const userId = req.user.user_id;
 
   if (!date || !color) {
@@ -301,21 +301,22 @@ app.post('/set-mood-color', authenticateToken, async (req, res) => {
     const [results] = await pool.query('SELECT * FROM `calendar` WHERE `user_id` = ? AND `date` = ?', [userId, date]);
     if (results.length > 0) {
       // 이미 해당 날짜의 데이터가 있는 경우 업데이트
-      await pool.query('UPDATE `calendar` SET `color` = ? WHERE `user_id` = ? AND `date` = ?', [color, userId, date]);
+      await pool.query('UPDATE `calendar` SET `color` = ?, `sticker_id` = ? WHERE `user_id` = ? AND `date` = ?', [color, sticker_id, userId, date]);
     } else {
       // 새로운 데이터 삽입
-      await pool.query('INSERT INTO `calendar` (`user_id`, `date`, `color`) VALUES (?, ?, ?)', [userId, date, color]);
+      await pool.query('INSERT INTO `calendar` (`user_id`, `date`, `color`, `sticker_id`) VALUES (?, ?, ?, ?)', [userId, date, color, sticker_id]);
     }
-    res.json({ isSuccess: true, message: '색상이 설정되었습니다.' });
+    res.json({ isSuccess: true, message: '색상과 스티커가 설정되었습니다.' });
   } catch (err) {
-    console.error('색상 설정 오류:', err);
+    console.error('색상 및 스티커 설정 오류:', err);
     res.status(500).json({ isSuccess: false, message: '서버 오류' });
   }
 });
 
-// 캘린더: 특정 날짜의 무드 색상 조회 엔드포인트
+
+// 캘린더: 특정 날짜의 무드 색상과 스티커 조회 엔드포인트
 app.get('/get-mood-color', authenticateToken, async (req, res) => {
-  const { date } = req.query; // 쿼리 파라미터로 날짜를 받음
+  const { date } = req.query; // req.query로 변경
   const userId = req.user.user_id;
 
   if (!date) {
@@ -323,40 +324,55 @@ app.get('/get-mood-color', authenticateToken, async (req, res) => {
   }
 
   try {
-    const [results] = await pool.query('SELECT `color` FROM `calendar` WHERE `user_id` = ? AND `date` = ?', [userId, date]);
-    if (results.length === 0) {
-      return res.status(404).json({ isSuccess: false, message: '해당 날짜의 무드 색상을 찾을 수 없습니다.' });
+    const [results] = await pool.query('SELECT * FROM `calendar` WHERE `user_id` = ? AND `date` = ?', [userId, date]);
+    if (results.length > 0) {
+      res.json({ isSuccess: true, color: results[0].color, sticker_id: results[0].sticker_id });
+    } else {
+      res.json({ isSuccess: false, message: '해당 날짜에 대한 데이터가 없습니다.' });
     }
-    res.json({ isSuccess: true, color: results[0].color });
   } catch (err) {
     console.error('무드 색상 조회 오류:', err);
     res.status(500).json({ isSuccess: false, message: '서버 오류' });
   }
 });
 
-// 캘린더에 스티커 적용 엔드포인트 (예시)
+
+// 사용자 캘린더 데이터 가져오기 엔드포인트
+app.get('/get-user-calendar', authenticateToken, async (req, res) => {
+  const userId = req.user.user_id;
+
+  try {
+    const [results] = await pool.query('SELECT `date`, `color`, `sticker_id` FROM `calendar` WHERE `user_id` = ?', [userId]);
+    res.json({ isSuccess: true, data: results });
+  } catch (err) {
+    console.error('캘린더 데이터 조회 오류:', err);
+    res.status(500).json({ isSuccess: false, message: '서버 오류' });
+  }
+});
+
+// 캘린더: 특정 날짜에 스티커 추가 엔드포인트
 app.post('/apply-sticker', authenticateToken, async (req, res) => {
   const { sticker_id, date } = req.body;
-  const user_id = req.user.user_id;
+  const userId = req.user.user_id;
+
+  console.log(`Received sticker_id: ${sticker_id}, date: ${date}`); // 디버깅용 로그 추가
 
   if (!sticker_id || !date) {
     return res.status(400).json({ isSuccess: false, message: '스티커 ID와 날짜를 입력해 주세요.' });
   }
 
   try {
-    // 사용자 스티커 확인
-    const [userStickers] = await pool.query('SELECT * FROM `user_stickers` WHERE `user_id` = ? AND `sticker_id` = ?', [user_id, sticker_id]);
-
-    if (userStickers.length === 0) {
-      return res.status(403).json({ isSuccess: false, message: '이 스티커를 소유하고 있지 않습니다.' });
+    const [results] = await pool.query('SELECT * FROM `calendar` WHERE `user_id` = ? AND `date` = ?', [userId, date]);
+    if (results.length > 0) {
+      // 이미 해당 날짜의 데이터가 있는 경우 업데이트
+      await pool.query('UPDATE `calendar` SET `sticker_id` = ? WHERE `user_id` = ? AND `date` = ?', [sticker_id, userId, date]);
+    } else {
+      // 새로운 데이터 삽입
+      await pool.query('INSERT INTO `calendar` (`user_id`, `date`, `sticker_id`) VALUES (?, ?, ?)', [userId, date, sticker_id]);
     }
-
-    // 스티커 적용 로직 (예시)
-    await pool.query('INSERT INTO `calendar_stickers` (`user_id`, `date`, `sticker_id`) VALUES (?, ?, ?)', [user_id, date, sticker_id]);
-
-    res.json({ isSuccess: true, message: '스티커가 적용되었습니다.' });
+    res.json({ isSuccess: true, message: '스티커가 성공적으로 추가되었습니다.' });
   } catch (err) {
-    console.error('스티커 적용 오류:', err);
+    console.error('스티커 추가 오류:', err);
     res.status(500).json({ isSuccess: false, message: '서버 오류' });
   }
 });
