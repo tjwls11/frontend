@@ -4,88 +4,82 @@ import {
     isSameMonth, eachMonthOfInterval, startOfYear, endOfYear, addYears, subYears, setMonth, setYear,
     isAfter
 } from 'date-fns';
-import 'bootstrap/dist/css/bootstrap.min.css'; // Bootstrap CSS를 임포트하여 기본 스타일을 적용
-import { setMoodColor, fetchUserStickers} from './api/api'; // API 호출 함수 임포트
+import 'bootstrap/dist/css/bootstrap.min.css';
+import { setMoodColor, fetchUserStickers } from './api/api'; 
 
 function Calendar() {
     // Mood colors used to color-code dates
     const colors = ['#FFABAB', '#FFC3A0', '#FFF58E', '#CDE6A5', '#ACD1EA', '#9FB1D9', '#C8BFE7'];
 
     // State hooks for managing calendar data and UI state
-    const [currentMonth, setCurrentMonth] = useState(new Date()); // 현재 달을 나타내는 상태
-    const [selectedDate, setSelectedDate] = useState(null); // 선택된 날짜를 나타내는 상태
-    const [moodColors, setMoodColors] = useState({}); // 날짜에 대한 감정 색상을 저장하는 상태
-    const [stickers, setStickers] = useState({}); // 날짜에 대한 스티커를 저장하는 상태
-    const [today, setToday] = useState(new Date()); // 오늘 날짜를 나타내는 상태
-    const [isEditingMonth, setIsEditingMonth] = useState(false); // 월 편집 모드 여부를 나타내는 상태
-    const [isEditingYear, setIsEditingYear] = useState(false); // 연도 편집 모드 여부를 나타내는 상태
-    const [inputMonth, setInputMonth] = useState(format(currentMonth, 'M')); // 월 입력 상태
-    const [inputYear, setInputYear] = useState(format(currentMonth, 'yyyy')); // 연도 입력 상태
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false); // 사이드바 열림 상태
-    const [isYearlyView, setIsYearlyView] = useState(false); // 연간 보기 모드 여부
-    const [currentYear, setCurrentYear] = useState(new Date()); // 현재 연도를 나타내는 상태
-    const [isEditingYearInYearlyView, setIsEditingYearInYearlyView] = useState(false); // 연간 보기에서 연도 편집 모드 여부
-    const [userStickers, setUserStickers] = useState([]); // 사용자의 스티커를 저장하는 상태
+    const [currentMonth, setCurrentMonth] = useState(new Date()); // Current month for calendar view
+    const [selectedDate, setSelectedDate] = useState(null); // Currently selected date
+    const [moodColors, setMoodColors] = useState({}); // Mood colors for each date
+    const [stickers, setStickers] = useState({}); // Stickers assigned to each date
+    const [today, setToday] = useState(new Date()); // Current date
+    const [isEditingMonth, setIsEditingMonth] = useState(false); // Flag to toggle month editing
+    const [isEditingYear, setIsEditingYear] = useState(false); // Flag to toggle year editing
+    const [inputMonth, setInputMonth] = useState(format(currentMonth, 'M')); // Month input for editing
+    const [inputYear, setInputYear] = useState(format(currentMonth, 'yyyy')); // Year input for editing
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Flag to control sidebar visibility
+    const [isYearlyView, setIsYearlyView] = useState(false); // Flag to toggle yearly view
+    const [currentYear, setCurrentYear] = useState(new Date()); // Current year for yearly view
+    const [isEditingYearInYearlyView, setIsEditingYearInYearlyView] = useState(false); // Flag to toggle year editing in yearly view
+    const [userStickers, setUserStickers] = useState([]); // User's stickers
 
-    const token = localStorage.getItem('token'); // 로컬 스토리지에서 인증 토큰을 가져옴
+    const token = localStorage.getItem('token'); // Authentication token from local storage
 
     // Load mood colors and stickers from local storage and fetch user stickers on component mount
     useEffect(() => {
-        setToday(new Date()); // 컴포넌트가 마운트될 때 오늘 날짜 설정
-        const storedMoodColors = JSON.parse(localStorage.getItem('moodColors')) || {}; // 로컬 스토리지에서 감정 색상 로드
-        const storedStickers = JSON.parse(localStorage.getItem('stickers')) || {}; // 로컬 스토리지에서 스티커 로드
-        setMoodColors(storedMoodColors); // 감정 색상 상태 업데이트
-        setStickers(storedStickers); // 스티커 상태 업데이트
+        setToday(new Date());
+        const storedMoodColors = JSON.parse(localStorage.getItem('moodColors')) || {};
+        const storedStickers = JSON.parse(localStorage.getItem('stickers')) || {};
+        setMoodColors(storedMoodColors);
+        setStickers(storedStickers);
 
         const loadUserStickers = async () => {
             try {
-                if (!token) throw new Error('Token not provided.'); // 토큰이 없으면 에러 발생
-                const ownedStickers = await fetchUserStickers(token); // API에서 사용자 스티커를 가져옴
-                setUserStickers(ownedStickers || []); // 스티커 상태 업데이트
+                if (!token) throw new Error('Token not provided.'); // Check if token is available
+                const ownedStickers = await fetchUserStickers(token); // Fetch stickers from API
+                setUserStickers(ownedStickers || []); // Update state with fetched stickers
             } catch (error) {
-                console.error('Error fetching user stickers:', error); // 스티커 로드 오류 로그
+                console.error('Error fetching user stickers:', error); // Log any errors
             }
         };
-        loadUserStickers(); // 스티커 로드 함수 호출
-    }, [token]); // token이 변경될 때마다 실행
-
-    // Save mood colors and stickers to local storage when they change
-    useEffect(() => {
-        localStorage.setItem('moodColors', JSON.stringify(moodColors)); // 감정 색상을 로컬 스토리지에 저장
-        localStorage.setItem('stickers', JSON.stringify(stickers)); // 스티커를 로컬 스토리지에 저장
-    }, [moodColors, stickers]); // moodColors와 stickers가 변경될 때마다 실행
+        loadUserStickers();
+    }, [token]); // Dependency on token, so effect runs when token changes
 
     // Navigate to previous month
-    const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1)); // 현재 월에서 1개월 전으로 이동
+    const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
     // Navigate to next month
-    const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1)); // 현재 월에서 1개월 후로 이동
+    const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
     // Navigate to previous year
-    const prevYear = () => setCurrentYear(subYears(currentYear, 1)); // 현재 연도에서 1년 전으로 이동
+    const prevYear = () => setCurrentYear(subYears(currentYear, 1));
     // Navigate to next year
-    const nextYear = () => setCurrentYear(addYears(currentYear, 1)); // 현재 연도에서 1년 후로 이동
+    const nextYear = () => setCurrentYear(addYears(currentYear, 1));
 
     // Handle date click to select a date and open sidebar
     const onDateClick = (day) => {
-        if (!isAfter(day, today)) { // 미래 날짜가 아닌 경우에만 처리
-            setSelectedDate(day); // 선택된 날짜 설정
-            setIsSidebarOpen(true); // 사이드바 열기
+        if (!isAfter(day, today)) { // Ensure the date is not in the future
+            setSelectedDate(day); // Set selected date
+            setIsSidebarOpen(true); // Open sidebar
         }
     };
 
     // Handle mood color selection and save to server
     const handleColorClick = async (color) => {
         if (selectedDate) {
-            const dateStr = format(selectedDate, 'yyyy-MM-dd'); // 날짜를 'yyyy-MM-dd' 형식으로 포맷
+            const dateStr = format(selectedDate, 'yyyy-MM-dd'); // Format date for key
             setMoodColors(prevColors => ({
                 ...prevColors,
-                [dateStr]: color, // 선택된 날짜의 감정 색상 업데이트
+                [dateStr]: color,
             }));
             try {
-                if (!token) throw new Error('Token not provided.'); // 토큰이 없으면 에러 발생
-                await setMoodColor(dateStr, color, token); // API에 감정 색상 저장 요청
-                console.log('Color saved to server'); // 서버에 저장 성공 로그
+                if (!token) throw new Error('Token not provided.'); // Check if token is available
+                await setMoodColor(dateStr, color, token); // Save color to server
+                console.log('Color saved to server'); // Log success
             } catch (error) {
-                console.error('Error saving color:', error); // 감정 색상 저장 오류 로그
+                console.error('Error saving color:', error); // Log any errors
             }
         }
     };
@@ -93,15 +87,15 @@ function Calendar() {
     // Handle adding a sticker to the selected date
     const handleStickerAdd = async (stickerId) => {
         if (selectedDate) {
-            const dateStr = format(selectedDate, 'yyyy-MM-dd'); // 날짜를 'yyyy-MM-dd' 형식으로 포맷
+            const dateStr = format(selectedDate, 'yyyy-MM-dd'); // Format date for key
             setStickers(prevStickers => ({
                 ...prevStickers,
-                [dateStr]: stickerId, // 선택된 날짜에 스티커 추가
+                [dateStr]: stickerId,
             }));
             try {
-                console.log('Sticker added to server'); // 서버에 스티커 추가 성공 로그
+                console.log('Sticker added to server'); // Log success
             } catch (error) {
-                console.error('Error adding sticker:', error); // 스티커 추가 오류 로그
+                console.error('Error adding sticker:', error); // Log any errors
             }
         }
     };
@@ -109,63 +103,63 @@ function Calendar() {
     // Handle removing a sticker from the selected date
     const handleStickerRemove = async () => {
         if (selectedDate) {
-            const dateStr = format(selectedDate, 'yyyy-MM-dd'); // 날짜를 'yyyy-MM-dd' 형식으로 포맷
+            const dateStr = format(selectedDate, 'yyyy-MM-dd'); // Format date for key
             setStickers(prevStickers => {
                 const updatedStickers = { ...prevStickers };
-                delete updatedStickers[dateStr]; // 선택된 날짜의 스티커 제거
+                delete updatedStickers[dateStr]; // Remove sticker
                 return updatedStickers;
             });
             try {
-                console.log('Sticker removed from server'); // 서버에서 스티커 제거 성공 로그
+                console.log('Sticker removed from server'); // Log success
             } catch (error) {
-                console.error('Error removing sticker:', error); // 스티커 제거 오류 로그
+                console.error('Error removing sticker:', error); // Log any errors
             }
         }
     };
 
     // Handle month input change and update current month
     const handleMonthChange = () => {
-        const newMonth = parseInt(inputMonth, 10); // 입력된 월을 정수로 변환
-        if (newMonth >= 1 && newMonth <= 12) { // 유효한 월인지 확인
-            setCurrentMonth(setMonth(currentMonth, newMonth - 1)); // 현재 월을 업데이트
-            setIsEditingMonth(false); // 월 편집 모드 종료
+        const newMonth = parseInt(inputMonth, 10);
+        if (newMonth >= 1 && newMonth <= 12) {
+            setCurrentMonth(setMonth(currentMonth, newMonth - 1));
+            setIsEditingMonth(false); // Exit editing mode
         }
     };
 
     // Handle year input change and update current month
     const handleYearChange = () => {
-        const newYear = parseInt(inputYear, 10); // 입력된 연도를 정수로 변환
-        if (newYear >= 1900 && newYear <= today.getFullYear()) { // 유효한 연도인지 확인
-            setCurrentMonth(setYear(currentMonth, newYear)); // 현재 월의 연도를 업데이트
-            setIsEditingYear(false); // 연도 편집 모드 종료
+        const newYear = parseInt(inputYear, 10);
+        if (newYear >= 1900 && newYear <= today.getFullYear()) {
+            setCurrentMonth(setYear(currentMonth, newYear));
+            setIsEditingYear(false); // Exit editing mode
         } else {
-            alert("Please enter a valid year."); // 유효하지 않은 연도일 때 경고
+            alert("Please enter a valid year."); // Alert for invalid year
         }
     };
 
     // Handle year input change in yearly view and update current year
     const handleYearChangeInYearlyView = () => {
-        const newYear = parseInt(inputYear, 10); // 입력된 연도를 정수로 변환
-        if (newYear >= 1900 && newYear <= today.getFullYear()) { // 유효한 연도인지 확인
-            setCurrentYear(setYear(currentYear, newYear)); // 현재 연도를 업데이트
-            setIsEditingYearInYearlyView(false); // 연도 편집 모드 종료
+        const newYear = parseInt(inputYear, 10);
+        if (newYear >= 1900 && newYear <= today.getFullYear()) {
+            setCurrentYear(setYear(currentYear, newYear));
+            setIsEditingYearInYearlyView(false); // Exit editing mode
         } else {
-            alert("Please enter a valid year."); // 유효하지 않은 연도일 때 경고
+            alert("Please enter a valid year."); // Alert for invalid year
         }
     };
 
     // Handle Enter key press in input fields
     const handleKeyDown = (e, callback) => {
-        if (e.key === 'Enter') { // Enter 키가 눌렸는지 확인
-            e.preventDefault(); // 기본 동작 방지
-            callback(); // 콜백 함수 호출
+        if (e.key === 'Enter') {
+            e.preventDefault(); // Prevent default behavior
+            callback(); // Call the callback function
         }
     };
 
     // Render header with month/year navigation
     const RenderHeader = ({ currentMonth, prevMonth, nextMonth }) => (
         <div className="d-flex justify-content-between align-items-center mb-3">
-            <button className="btn btn-outline-primary" onClick={prevMonth}>◀</button> {/* 이전 월 버튼 */}
+            <button className="btn btn-outline-primary" onClick={prevMonth}>◀</button>
             <div className="text-center">
                 {isEditingYear ? (
                     <input
@@ -178,8 +172,8 @@ function Calendar() {
                         className="form-control"
                     />
                 ) : (
-                    <span onClick={() => setIsEditingYear(true)}>{format(currentMonth, 'yyyy년')}</span> )/* 연도 표시 및 클릭 시 편집 모드 */}
-                )
+                    <span onClick={() => setIsEditingYear(true)}>{format(currentMonth, 'yyyy년')}</span>
+                )}
                 {isEditingMonth ? (
                     <input
                         type="number"
@@ -191,16 +185,16 @@ function Calendar() {
                         className="form-control"
                     />
                 ) : (
-                    <span onClick={() => setIsEditingMonth(true)}>{format(currentMonth, 'M월')}</span> )/* 월 표시 및 클릭 시 편집 모드 */}
-                )
+                    <span onClick={() => setIsEditingMonth(true)}>{format(currentMonth, 'M월')}</span>
+                )}
             </div>
-            <button className="btn btn-outline-primary" onClick={nextMonth}>▶</button> {/* 다음 월 버튼 */}
+            <button className="btn btn-outline-primary" onClick={nextMonth}>▶</button>
         </div>
     );
 
     // Render day labels (SUN, MON, TUE, etc.)
     const RenderDays = () => {
-        const dayLabels = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']; // 요일 라벨
+        const dayLabels = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
         return (
             <div className="row">
@@ -215,10 +209,10 @@ function Calendar() {
 
     // Render calendar cells for the current month
     const RenderCells = ({ currentMonth, moodColors, stickers, onDateClick }) => {
-        const monthStart = startOfMonth(currentMonth); // 현재 월의 시작 날짜
-        const monthEnd = endOfMonth(monthStart); // 현재 월의 종료 날짜
-        const startDate = startOfWeek(monthStart); // 월의 첫날이 포함된 주의 시작 날짜
-        const endDate = endOfWeek(monthEnd); // 월의 마지막 날이 포함된 주의 종료 날짜
+        const monthStart = startOfMonth(currentMonth); // Start of the current month
+        const monthEnd = endOfMonth(monthStart); // End of the current month
+        const startDate = startOfWeek(monthStart); // Start of the week containing the first of the month
+        const endDate = endOfWeek(monthEnd); // End of the week containing the end of the month
     
         const rows = [];
         let day = startDate;
@@ -229,10 +223,10 @@ function Calendar() {
     
             for (let i = 0; i < 7; i++) {
                 const currentDay = day;
-                const dayKey = format(currentDay, 'yyyy-MM-dd'); // 날짜를 'yyyy-MM-dd' 형식으로 포맷
-                const dayColor = moodColors[dayKey] || 'transparent'; // 날짜의 감정 색상 또는 투명색
-                const stickerId = stickers[dayKey]; // 날짜의 스티커 ID
-                const sticker = userStickers.find(s => s.sticker_id === stickerId); // 스티커 정보 찾기
+                const dayKey = format(currentDay, 'yyyy-MM-dd'); // Format date for key
+                const dayColor = moodColors[dayKey] || 'transparent'; // Get color for the day
+                const stickerId = stickers[dayKey]; // Get sticker ID for the day
+                const sticker = userStickers.find(s => s.sticker_id === stickerId); // Find sticker info
     
                 days.push(
                     <div
@@ -240,7 +234,7 @@ function Calendar() {
                             !isSameMonth(currentDay, currentMonth) ? 'text-muted' : ''
                         }`}
                         key={dayKey}
-                        onClick={() => onDateClick(currentDay)} // 날짜 클릭 시 핸들러 호출
+                        onClick={() => onDateClick(currentDay)} // Click handler for selecting a date
                         style={{
                             cursor: 'pointer',
                             backgroundColor: dayColor,
@@ -250,10 +244,10 @@ function Calendar() {
                         }}
                     >
                         <div className="position-relative">
-                            {format(currentDay, 'd')} {/* 날짜 숫자 */}
+                            {format(currentDay, 'd')} {/* Day number */}
                             {sticker && (
                                 <img
-                                    src={sticker.image_url} // 스티커 이미지 URL
+                                    src={sticker.image_url} // Sticker image
                                     alt={sticker.name}
                                     style={{
                                         width: '30px',
@@ -269,21 +263,21 @@ function Calendar() {
                         </div>
                     </div>
                 );
-                day = addDays(day, 1); // 다음 날로 이동
+                day = addDays(day, 1); // Move to the next day
             }
-            rows.push(<div className="row" key={format(day, 'yyyy-MM-dd')}>{days}</div>); // 주 단위로 행 추가
+            rows.push(<div className="row" key={format(day, 'yyyy-MM-dd')}>{days}</div>); // Add row to rows
         }
     
-        return <div>{rows}</div>; // 모든 주를 포함한 행 반환
+        return <div>{rows}</div>; // Return rows
     };
     
 
     // Render mini month view for yearly view
     const RenderMiniMonth = ({ month, moodColors }) => {
-        const monthStart = startOfMonth(month); // 현재 월의 시작 날짜
-        const monthEnd = endOfMonth(month); // 현재 월의 종료 날짜
-        const startDate = startOfWeek(monthStart); // 월의 첫날이 포함된 주의 시작 날짜
-        const endDate = endOfWeek(monthEnd); // 월의 마지막 날이 포함된 주의 종료 날짜
+        const monthStart = startOfMonth(month); // Start of the month
+        const monthEnd = endOfMonth(month); // End of the month
+        const startDate = startOfWeek(monthStart); // Start of the week containing the first of the month
+        const endDate = endOfWeek(monthEnd); // End of the week containing the end of the month
 
         const rows = [];
         let day = startDate;
@@ -294,8 +288,8 @@ function Calendar() {
 
             for (let i = 0; i < 7; i++) {
                 const currentDay = day;
-                const dayKey = format(currentDay, 'yyyy-MM-dd'); // 날짜를 'yyyy-MM-dd' 형식으로 포맷
-                const dayColor = moodColors[dayKey] || 'transparent'; // 날짜의 감정 색상 또는 투명색
+                const dayKey = format(currentDay, 'yyyy-MM-dd'); // Format date for key
+                const dayColor = moodColors[dayKey] || 'transparent'; // Get color for the day
 
                 days.push(
                     <div
@@ -312,15 +306,15 @@ function Calendar() {
                                 backgroundColor: dayColor,
                             }}
                         ></div>
-                        <div>{format(currentDay, 'd')}</div> {/* 날짜 숫자 */}
+                        <div>{format(currentDay, 'd')}</div> {/* Day number */}
                     </div>
                 );
-                day = addDays(day, 1); // 다음 날로 이동
+                day = addDays(day, 1); // Move to the next day
             }
-            rows.push(<div className="row" key={format(day, 'yyyy-MM-dd')}>{days}</div>); // 주 단위로 행 추가
+            rows.push(<div className="row" key={format(day, 'yyyy-MM-dd')}>{days}</div>); // Add row to rows
         }
 
-        return <div>{rows}</div>; // 모든 주를 포함한 행 반환
+        return <div>{rows}</div>; // Return rows
     };
 
     return (
