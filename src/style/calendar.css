@@ -1,216 +1,27 @@
-body {
-    background-color: #FFFBE6; /* 전체 배경 색상 설정 */
-}
-
-/* 캘린더 컨테이너 */
-.calendar-container {
-    width: 80%; /* 캘린더 컨테이너 너비를 화면의 80%로 설정 */
-    margin: auto; /* 컨테이너를 수평 중앙에 배치 */
-    margin-top: 50px; /* 상단 여백 설정 */
-    position: relative; /* 상대 위치 설정 */
-}
-
-/* 전체 캘린더 */
-.calendar {
-    width: 100%; /* 캘린더의 너비를 컨테이너의 100%로 설정 */
-    background-color: #ffffff; /* 배경 색상 흰색 */
-    border-radius: 10px; /* 캘린더 모서리를 둥글게 설정 */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 그림자 추가 */
-    overflow: hidden; /* 캘린더 내용이 넘칠 경우 숨기기 */
-}
-
-/* 헤더 섹션 */
-.calendar-header {
-    display: flex; /* 플렉스 박스 레이아웃 사용 */
-    justify-content: space-between; /* 헤더 내의 요소들을 양쪽 끝으로 배치 */
-    align-items: center; /* 수직 방향으로 중앙 정렬 */
-    padding: 10px 20px; /* 상하 패딩 10px, 좌우 패딩 20px 설정 */
-    margin-bottom: 10px; /* 하단 여백 설정 */
-}
-
-/* 요일 헤더 */
-.calendar .header .day {
-    height: 50px; /* 요일 셀의 높이를 늘림 */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* 달력 날짜 셀 */
-.calendar .body .col {
-    height: 100px; /* 날짜 셀의 높이를 늘림 */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column; /* 내용물 수직 정렬 */
-    position: relative; /* 상대 위치 지정 */
-}
-
-/* 년도와 월을 감싸는 컨테이너 */
-.month-year-container {
-    display: flex; /* 플렉스 박스 레이아웃 사용 */
-    align-items: center; /* 수직 방향으로 중앙 정렬 */
-    gap: 10px; /* 년도와 월 사이의 간격 설정 */
-}
-
-/* 년도와 월 텍스트 */
-.month-year {
-    font-weight: 600; /* 폰트 두께를 굵게 설정 */
-    font-size: 1.2em; /* 폰트 크기 설정 */
-    cursor: pointer; /* 마우스 커서를 포인터로 변경 */
-    color: #0d4225; /* 진한 초록색 */
-}
-
-/* 년도와 월 입력 필드 */
-.month-year-input {
-    width: 65px; /* 입력 필드 너비 설정 */
-    height: 30px; /* 입력 필드 높이 설정 */
-    font-size: 1em; /* 입력 필드 폰트 크기 설정 */
-    text-align: center; /* 텍스트 중앙 정렬 */
-    border: 1px solid #ccc; /* 테두리 색상과 두께 설정 */
-    border-radius: 4px; /* 입력 필드 모서리 둥글게 설정 */
-}
-
-/* 이동 버튼 */
-.prev-button, .next-button {
-    cursor: pointer; /* 버튼 클릭 시 포인터 커서 표시 */
-    background: none; /* 배경 없음 */
-    border: none; /* 테두리 없음 */
-    font-size: 1.5em; /* 폰트 크기 설정 */
-    color: #0d4225; /* 진한 초록색 */
-}
-
-/* 요일 헤더 */
-.days {
-    width: 100%; /* 요일 헤더의 너비를 캘린더의 100%로 설정 */
-    display: flex; /* 플렉스 박스 레이아웃 사용 */
-    justify-content: space-between; /* 요일 셀을 양쪽 끝으로 배치 */
-    align-items: center; /* 수직 방향으로 중앙 정렬 */
-    font-weight: 600; /* 폰트 두께를 굵게 설정 */
-    font-size: 0.65em; /* 폰트 크기 설정 */
-    padding: 5px; /* 상하 좌우 패딩 설정 */
-    color: #FFFBE6; /* 배경색 */
-    background-color: rgb(87, 140, 111); /* 진한 초록색 */
-}
-
-/* 요일 셀 */
-.days .col {
-    width: 14%; /* 요일 셀의 너비를 전체의 14%로 설정 */
-    height: 50px; /* 요일 셀의 높이를 50px로 설정 */
-    display: flex; /* 플렉스 박스 레이아웃 사용 */
-    justify-content: center; /* 수평 방향으로 중앙 정렬 */
-    align-items: center; /* 수직 방향으로 중앙 정렬 */
-    font-size: 1.2em; /* 폰트 크기 설정 */
-}
-
-/* 본문 내의 행 */
-.body .row {
-    width: 100%; /* 행의 너비를 캘린더의 100%로 설정 */
-    display: flex; /* 플렉스 박스 레이아웃 사용 */
-    justify-content: space-between; /* 셀을 양쪽 끝으로 배치 */
-    align-items: center; /* 수직 방향으로 중앙 정렬 */
-}
-
-/* 캘린더 셀 */
-.body .col {
-    width: 14%; /* 셀의 너비를 전체의 14%로 설정 */
-    height: 100px; /* 셀의 높이를 100px로 설정 */
-    display: flex; /* 플렉스 박스 레이아웃 사용 */
-    justify-content: center; /* 수평 방향으로 중앙 정렬 */
-    align-items: center; /* 수직 방향으로 중앙 정렬 */
-    font-size: 0.8em; /* 폰트 크기 설정 */
-    border-radius: 3px; /* 셀의 모서리 둥글게 설정 */
-    background: #FFFBE6; /* 베이지 배경색 */
-    margin: 2px; /* 셀 사이의 여백 설정 */
-    position: relative; /* 스티커 위치 설정을 위해 상대 위치 지정 */
-}
-
-/* 색상 선택기 컨테이너 */
-.color-picker {
-    display: flex; /* 플렉스 박스 레이아웃 사용 */
-    gap: 5px; /* 색상 옵션 사이의 간격 설정 */
-    position: fixed; /* 화면 고정 위치 설정 */
-    bottom: 70px; /* 하단에서 70px 위치 */
-    left: 50%; /* 화면의 중앙에 위치 */
-    transform: translateX(-50%); /* 수평 중앙 정렬 */
-}
-
-/* 색상 옵션 */
-.color-option {
-    width: 30px; /* 색상 옵션 너비 설정 */
-    height: 30px; /* 색상 옵션 높이 설정 */
-    border-radius: 50%; /* 원형 모서리 설정 */
-    cursor: pointer; /* 마우스 커서 포인터로 변경 */
-    border: 2px solid #0d4225; /* 진한 초록색 테두리 */
-}
-
-/* 선택된 셀 스타일 */
-.cell.selected {
-    border: 1px solid #0d4225; /* 진한 초록색 */
-}
-
-/* 유효한 셀 클릭 시 커서 스타일 */
-.cell.valid {
-    cursor: pointer; /* 유효한 셀 클릭 시 포인터 커서 표시 */
-}
-
-/* 비활성화된 셀 스타일 */
-.cell.disabled {
-    opacity: 0.5; /* 비활성화된 셀의 투명도 설정 */
-}
-
-/* 스티커 아이콘 스타일 */
-.sticker-icon {
-    width: 80%; /* 스티커 아이콘 크기 조정 */
-    height: auto; /* 비율에 맞게 높이 자동 조정 */
-    max-width: 30px; /* 최대 너비 설정 */
-    max-height: 30px; /* 최대 높이 설정 */
-}
-
-/* 스티커 아이콘 미니 버전 스타일 */
-.sticker-icon-mini {
-    width: 100%; /* 스티커 아이콘 미니 버전 크기 조정 */
-    height: auto; /* 비율에 맞게 높이 자동 조정 */
-    max-width: 20px; /* 최대 너비 설정 */
-    max-height: 20px; /* 최대 높이 설정 */
-}
-
-/* 사이드바 스타일 */
-.sidebar {
-    position: fixed; /* 화면 고정 위치 설정 */
-    bottom: 20px; /* 하단에서 20px 위치 */
-    left: 20px; /* 왼쪽에서 20px 위치 */
-    width: 50px; /* 사이드바 너비 설정 */
-    height: 50px; /* 사이드바 높이 설정 */
-    background: #ffffff; /* 베이지 배경색 */
-    border-radius: 50%; /* 원형 모서리 설정 */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* 사이드바에 그림자 추가 */
-    display: flex; /* 플렉스 박스 레이아웃 사용 */
-    align-items: center; /* 수직 방향으로 중앙 정렬 */
-    justify-content: center; /* 수평 방향으로 중앙 정렬 */
-    cursor: pointer; /* 클릭 시 포인터 커서 표시 */
-}
-
-/* 사이드바 내의 아이콘 스타일 */
-.sidebar .icon {
-    width: 25px; /* 아이콘 너비 설정 */
-    height: auto; /* 비율에 맞게 높이 자동 조정 */
-}
-
-/* CSS for the sticker picker */
-.sticker-picker {
-    /* Existing styles */
-}
-
-.sticker-option {
-    /* Add or adjust styles here */
-    display: inline-block;
-    margin: 5px; /* Adjust spacing if needed */
-    cursor: pointer;
-}
-
 .sticker-image {
-    width: 50px; /* Adjust size here */
-    height: 50px; /* Adjust size here */
-    object-fit: contain; /* Maintain aspect ratio */
+    width: 30px; /* 스티커 크기 조정 */
+    height: 30px; /* 스티커 크기 조정 */
+}
+
+.cell.selected {
+    border: 2px solid green; /* 초록색 테두리 추가 */
+}
+
+.color-sticker-picker {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5); /* 반투명 배경 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.color-picker, .sticker-picker {
+    background-color: rgba(255, 255, 255, 0.9); /* 불투명 배경 */
+    padding: 10px;
+    border-radius: 5px;
 }

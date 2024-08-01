@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { fetchStickers, fetchUserStickers, buySticker } from './api/api';
-
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 const StickerShop = () => {
   const [stickers, setStickers] = useState([]);
@@ -31,14 +31,14 @@ const StickerShop = () => {
     loadStickers();
   }, [token]);
 
-  const handleBuySticker = async (stickerId) => {
+  const handleBuySticker = async (stickerId, price) => {
     try {
       if (!token) {
         alert('로그인이 필요합니다.');
         return;
       }
 
-      const response = await buySticker(token, stickerId); // 구매 API 호출
+      const response = await buySticker(stickerId, price, token); // 매개변수 수정
       if (response.status === 200) {
         alert('스티커 구매 성공!');
         // 구매 후 사용자 스티커 목록 업데이트
@@ -55,22 +55,25 @@ const StickerShop = () => {
   };
 
   return (
-    <div className="sticker-shop">
-      <h1>스티커 샵</h1>
-      {error && <p className="error-message">{error}</p>}
-      <div className="sticker-list">
+    <div className="container mt-5">
+      <h1 className="text-center mb-4">스티커 샵</h1>
+      {error && <p className="text-danger text-center">{error}</p>}
+      <div className="row">
         {stickers.map(sticker => (
-          <div key={sticker.sticker_id} className="sticker-item">
-            <img src={sticker.image_url} alt={sticker.name} className="sticker-image" />
-            <div className="sticker-info">
-              <h2>{sticker.name}</h2>
-              <p>가격: {sticker.price} 코인</p>
-              <button
-                disabled={!token || userStickers.some(userSticker => userSticker.sticker_id === sticker.sticker_id)}
-                onClick={() => handleBuySticker(sticker.sticker_id)}
-              >
-                {userStickers.some(userSticker => userSticker.sticker_id === sticker.sticker_id) ? '소유함' : '구매하기'}
-              </button>
+          <div key={sticker.sticker_id} className="col-md-4 mb-4">
+            <div className="card">
+              <img src={sticker.image_url} alt={sticker.name} className="card-img-top" />
+              <div className="card-body">
+                <h5 className="card-title">{sticker.name}</h5>
+                <p className="card-text">가격: {sticker.price} 코인</p>
+                <button
+                  className="btn btn-primary"
+                  disabled={!token || userStickers.some(userSticker => userSticker.sticker_id === sticker.sticker_id)}
+                  onClick={() => handleBuySticker(sticker.sticker_id, sticker.price)} // price 추가
+                >
+                  {userStickers.some(userSticker => userSticker.sticker_id === sticker.sticker_id) ? '소유함' : '구매하기'}
+                </button>
+              </div>
             </div>
           </div>
         ))}
