@@ -6,23 +6,6 @@ CREATE TABLE `user` (
     PRIMARY KEY (`user_id`)
 );
 
-CREATE TABLE `stickers` (
-    `sticker_id` int NOT NULL AUTO_INCREMENT,
-    `name` varchar(255) NOT NULL,
-    `image_url` varchar(255) NOT NULL,
-    `price` int NOT NULL,
-    PRIMARY KEY (`sticker_id`)
-);
-
-CREATE TABLE `user_stickers` (
-    `user_id` varchar(255) NOT NULL,
-    `sticker_id` int NOT NULL,
-    `purchase_date` datetime DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (`user_id`, `sticker_id`),
-    KEY `sticker_id` (`sticker_id`),
-    CONSTRAINT `user_stickers_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`),
-    CONSTRAINT `user_stickers_ibfk_2` FOREIGN KEY (`sticker_id`) REFERENCES `stickers` (`sticker_id`)
-);
 
 CREATE TABLE `diary` (
     `id` int NOT NULL AUTO_INCREMENT,
@@ -41,10 +24,7 @@ CREATE TABLE `calendar` (
   `user_id` varchar(255) NOT NULL,
   `date` date NOT NULL,
   `color` varchar(7) DEFAULT NULL,
-  `sticker_id` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `user_id_date` (`user_id`,`date`),
-  KEY `calendar_ibfk_2` (`sticker_id`),
-  CONSTRAINT `calendar_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE,
-  CONSTRAINT `calendar_ibfk_2` FOREIGN KEY (`sticker_id`) REFERENCES `stickers` (`sticker_id`)
-)
+  CONSTRAINT `calendar_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE
+) 

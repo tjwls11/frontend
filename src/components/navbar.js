@@ -19,7 +19,6 @@ const Navbar = () => {
             <Link to="/diary">Diary</Link>
             <Link to="/calendar">Mood Tracker</Link>
             <Link to="/mypage">My Page</Link>
-            <Link to="/stickershop">sticker</Link>
             <button className="logout-button" onClick={handleLogout}>Logout</button>
           </>
         ) : (
