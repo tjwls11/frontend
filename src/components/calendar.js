@@ -30,13 +30,9 @@ const RenderSidebar = ({ isOpen, selectedDate, colors, handleMoodChange, closeSi
     );
 };
 
-
 function Calendar() {
     const colors = ['#FFABAB', '#FFC3A0', '#FFF58E', '#CDE6A5', '#ACD1EA', '#9FB1D9', '#C8BFE7'];
-    const stickers = [
-        'https://i.ibb.co/swgdV4Z/free-icon-emoji-6723246.png',
-        'https://i.ibb.co/Ss48HGm/free-icon-sad-3129281.png',
-    ];
+    
 
     const [currentMonth, setCurrentMonth] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState(null);
@@ -50,9 +46,9 @@ function Calendar() {
     const [isYearlyView, setIsYearlyView] = useState(false);
     const [currentYear, setCurrentYear] = useState(new Date());
     const [isEditingYearInYearlyView, setIsEditingYearInYearlyView] = useState(false);
+    const [hoveredDate, setHoveredDate] = useState(null);
 
     const token = localStorage.getItem('token');
-
 
     useEffect(() => {
         const initializeCalendar = async () => {
@@ -215,10 +211,18 @@ function Calendar() {
                         className={`col text-center p-2 ${isSameMonth(currentDay, monthStart) ? '' : 'text-muted'}`}
                         key={currentDay}
                         onClick={() => onDateClick(currentDay)}
+                        onMouseEnter={() => setHoveredDate(currentDay)}
+                        onMouseLeave={() => setHoveredDate(null)}
                         style={{ backgroundColor: color }}
                     >
                         <span>{format(currentDay, 'd')}</span>
                         {sticker && <img src={sticker} alt="sticker" className="sticker" />}
+                        {/* 요약 정보 표시 */}
+                        {hoveredDate && isSameMonth(currentDay, currentMonth) && (
+                            <div className="tooltip" style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)' }}>
+                                {moodColors[dayKey] ? `Mood: ${moodColors[dayKey]}` : 'No mood recorded'}
+                            </div>
+                        )}
                     </div>
                 );
 
@@ -232,7 +236,7 @@ function Calendar() {
             );
         }
 
-        return <div>{rows}</div>;
+        return <div>{rows}</div>; 
     };
 
     const RenderYearlyView = ({ currentYear, moodColors, onDateClick }) => {
@@ -325,7 +329,6 @@ function Calendar() {
                 isOpen={isSidebarOpen}
                 selectedDate={selectedDate}
                 colors={colors}
-                stickers={stickers}
                 handleMoodChange={handleMoodChange}
                 closeSidebar={() => setIsSidebarOpen(false)}
             />
