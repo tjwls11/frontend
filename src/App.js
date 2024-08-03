@@ -9,7 +9,6 @@ import Calendar from './components/calendar';
 import Diary from './components/diary';
 import AddDiary from './components/adddiary';
 import DetailDiary from './components/detaildiary';
-import ChartComponent from './components/ChartComponent'
 import { LoginProvider } from './context/LoginContext';
 
 
@@ -27,7 +26,6 @@ const App = () => {
           <Route path="/diary" element={<Diary />} />
           <Route path="/detaildiary/:id" element={<DetailDiary />} />
           <Route path="/add-diary" element={<AddDiary />} />
-          <Route path='/ChartComponent' element={<ChartComponent/>} />
         
     
         </Routes>
