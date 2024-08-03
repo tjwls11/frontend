@@ -83,6 +83,7 @@ const Diary = () => {
                         <tr>
                             <th className="text-center">제목</th>
                             <th className="text-center">날짜</th>
+                            <th className="text-center">수정</th>
                             <th className="text-center">삭제</th>
                         </tr>
                     </thead>
@@ -90,11 +91,19 @@ const Diary = () => {
                         {diaries.map((diary) => (
                             <tr key={diary.id}>
                                 <td className="text-center">
-                                    <Link to={`/detaildiary/${diary.id}`} className="text-decoration-none">
+                                    <Link to={`/detail-diary/${diary.id}`} className="text-decoration-none">
                                         {diary.title}
                                     </Link>
                                 </td>
                                 <td className="text-center">{formatDate(diary.date)}</td>
+                                <td className="text-center">
+                                    <Link
+                                        to={`/edit-diary/${diary.id}`}
+                                        className="btn btn-primary btn-sm"
+                                    >
+                                        수정
+                                    </Link>
+                                </td>
                                 <td className="text-center">
                                     <button
                                         className="btn btn-danger btn-sm"

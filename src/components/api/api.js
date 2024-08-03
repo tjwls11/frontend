@@ -109,32 +109,57 @@ export const deleteDiary = async (id, token) => {
   }
 };
 
+// 다이어리 수정
+export const editDiary = async (id, diaryData, token) => {
+  const url = `http://localhost:3011/edit-diary/${id}`;
+  try {
+    const response = await axios.put(url, diaryData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    return response.data;
+  } catch (error) {
+    throw new Error(`다이어리 수정 중 오류가 발생했습니다. - Status: ${error.response?.status}, Message: ${error.message}`);
+  }
+};
+
+
+// 날짜별 다이어리 체크 API 호출
+export const checkDiaryAvailability = async (date, token) => {
+  try {
+    const response = await axios.get(`${API_URL}/checkDiary`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      params: {
+        date,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    handleError('다이어리 날짜 확인 중 오류가 발생했습니다.', error);
+  }
+};
 
 // 색상 저장 API 호출
 export const setMoodColor = async (date, color, token) => {
   try {
-      const response = await axios.post(`${API_URL}/set-mood-color`, { date, color }, {
-          headers: {
-              Authorization: `Bearer ${token}`
-          }
-      });
-      return response.data;
+    const response = await axios.post(`${API_URL}/set-mood-color`, { date, color }, getAuthHeaders(token));
+    return response.data;
   } catch (error) {
-      handleError('무드 색상 설정 중 오류가 발생했습니다.', error);
+    handleError('무드 색상 설정 중 오류가 발생했습니다.', error);
   }
 };
 
 // 색상 조회 API 호출
 export const fetchUserCalendar = async (token) => {
   try {
-      const response = await axios.get(`${API_URL}/get-user-calendar`, {
-          headers: {
-              Authorization: `Bearer ${token}`
-          }
-      });
-      return response.data;
+    const response = await axios.get(`${API_URL}/get-user-calendar`, getAuthHeaders(token));
+    return response.data;
   } catch (error) {
-      handleError('캘린더 데이터 조회 중 오류가 발생했습니다.', error);
+    handleError('캘린더 데이터 조회 중 오류가 발생했습니다.', error);
   }
 };
 
@@ -149,7 +174,6 @@ export const uploadProfilePicture = async (formData, token) => {
     });
     return response.data;
   } catch (error) {
-    console.error('프로필 사진 업로드 중 오류가 발생했습니다.', error);
-    throw error;
+    handleError('프로필 사진 업로드 중 오류가 발생했습니다.', error);
   }
 };

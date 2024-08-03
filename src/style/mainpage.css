@@ -1,88 +1,117 @@
-* {
-  background: #fffaf0;
+.mainpage {
+  font-family: 'RIDIBatang', sans-serif;
 }
 
-.container {
-  height: 80px;
-  line-height: 80px;
+.header-opacity {
+  opacity: 0.9;
+  padding: 20px;
+  text-align: center;
 }
 
-/* 메인 소개 페이지*/
-.hd {
-  position: relative;
-  height: 550px;
-  text-align: center;
-  padding-top: 100px;
-  padding-bottom: 100px;
+.header-content {
+  margin: 120px !important;
 }
-.hd::before {
-  content: "";
-  display: block;
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
+
+.title {
+  font-size: 2.5em;
+  color: white;
+  font-weight: bold;
 }
-.box {
-  position: absolute;
-  left: 60px;
-  right: 60px;
-  bottom: 80px;
+
+.subtitle {
+  font-size: 1.2em;
+  color: white;
+}
+
+.content-box {
+  display: flex; /* 추가 부분 */
+  flex-direction: column; /* 추가 부분 */
+  align-items: center;
+  justify-content: center; /* 추가 부분 */
+  padding: 60px;
+  background-color: #fffef9;
+  color: #312c25;
+  border-radius: 20px;
   text-align: center;
-  margin-right: 200px;
-  margin-left: 200px;
-  margin-top: 50px;
-  margin-bottom: 50px;
-  animation: text 1.5s ease-in;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 85%;
+  margin: 35px;
+  margin-top: 80px;
+  margin-left: auto; /* 추가 부분 */
+  margin-right: auto; /* 추가 부분 */
+}
+
+.section-title {
+  font-size: 2em;
+  margin-bottom: 20px;
+  color: rgb(113, 165, 136) !important;
+}
+
+.section-description {
+  font-size: 1.1em;
+  line-height: 1.6;
+}
+
+.main-section {
+  padding: 20px;
+}
+
+.section-content {
+  margin-bottom: 80px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+}
+
+.card {
+  background-color: #ffffff9c;
   border-radius: 10px;
-  color: #000;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin: 15px;
+  margin-top: 80px;
+  flex-basis: 45%;
+  padding: 30px;
+  text-align: center;
 }
-/* box안에 있는 text 움직임 지정*/
-@keyframes text {
-  from {
-    opacity: 0%;
+
+.card-image img {
+  max-width: 100%;
+  border-radius: 20px;
+}
+
+.card-description {
+  margin-top: 20px;
+}
+
+.card-title1 {
+  font-size: 1.5em;
+  margin-bottom: 10px;
+  margin-top: 20px;
+}
+
+/* 여기서부터 미디어 쿼리 추가 */
+@media (max-width: 859px) {
+  .card {
+    flex-basis: 80%;
   }
-  to {
-    opacity: 100%;
+  .content-box {
+    width: 90%;
   }
 }
-/* 일기와 무드트래커 소개 페이지*/
-.artc {
-  width: 960px;
-  height: 350px;
-  margin-left: 250px;
+
+@media (min-width: 860px) and (max-width: 1300px) {
+  .card {
+    flex-basis: 45%;
+  }
 }
-.card-img1 img {
-  position: relative;
-  left: 50px;
-  width: 100%;
-  height: 70%;
-  margin-right: 60px;
-}
-.card-img2 img {
-  position: relative;
-  right: 50px;
-  width: 100%;
-  height: 100%;
-  margin-left: 60px;
-}
-/* card-text1,card-text2,card-img1,card-img2를 각각의 상자라고 생각하고 배열을 지정함*/
-.artc {
-  margin-top: 50px;
-  margin-bottom: 50px;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(2, 1fr);
-}
-.card-text1 {
-  text-align: left;
-  margin-left: 60px;
-}
-.card-text2 {
-  text-align: right;
-  margin-right: 60px;
-}
-.font {
-  font-size: 50px;
+
+@media (min-width: 1301px) {
+  .card {
+    flex-basis: 45%;
+  }
+
+  .section-content {
+    margin-left: 60px;
+    margin-right: 60px;
+  }
 }
