@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { fetchUserInfo, changePassword } from './api/api'; 
+import { fetchUserInfo, changePassword, uploadProfilePicture } from './api/api';
 
 const MyPage = () => {
   const [user, setUser] = useState(null);
@@ -7,33 +7,35 @@ const MyPage = () => {
   const [newPassword, setNewPassword] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [profilePicture, setProfilePicture] = useState(null);
+
+  // 사용자 정보를 가져오는 함수
+  const getUserInfo = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert("로그인이 필요합니다.");
+      window.location.href = "/Login";
+      return;
+    }
+
+    try {
+      const response = await fetchUserInfo(token);
+      if (response.isSuccess) {
+        setUser(response.user);
+        localStorage.setItem('user', JSON.stringify(response.user));
+      } else {
+        setError("유저 정보 요청 중 오류가 발생했습니다.");
+      }
+    } catch (error) {
+      console.error("유저 정보 요청 중 오류가 발생했습니다.", error);
+      setError("유저 정보 요청 중 오류가 발생했습니다.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const getUserInfo = async () => {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        alert("로그인이 필요합니다.");
-        window.location.href = "/Login";
-        return;
-      }
-
-      try {
-        const response = await fetchUserInfo(token);
-        if (response.isSuccess) {
-          setUser(response.user); // `response.user`에 유저 정보를 저장
-          localStorage.setItem('user', JSON.stringify(response.user)); // 사용자 정보 로컬 저장
-        } else {
-          setError("유저 정보 요청 중 오류가 발생했습니다.");
-        }
-      } catch (error) {
-        console.error("유저 정보 요청 중 오류가 발생했습니다.", error);
-        setError("유저 정보 요청 중 오류가 발생했습니다.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    getUserInfo();
+    getUserInfo(); // 컴포넌트가 마운트될 때 사용자 정보 가져오기
   }, []);
 
   const handleChangePassword = async () => {
@@ -59,6 +61,42 @@ const MyPage = () => {
     }
   };
 
+  const handleProfilePictureChange = (e) => {
+    setProfilePicture(e.target.files[0]);
+  };
+
+  const uploadProfilePictureHandler = async () => {
+    if (!profilePicture) {
+      alert("프로필 사진을 선택하세요.");
+      return;
+    }
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('profilePicture', profilePicture);
+
+    try {
+      const response = await uploadProfilePicture(formData, token);
+
+      if (response.isSuccess) {
+        alert("프로필 사진이 변경되었습니다.");
+        // 프로필 사진이 변경된 후 사용자 정보를 새로 가져옵니다.
+        await getUserInfo();
+        setProfilePicture(null); // 선택한 파일 초기화
+      } else {
+        alert("프로필 사진 변경 중 오류가 발생했습니다.");
+      }
+    } catch (error) {
+      console.error("프로필 사진 변경 중 오류가 발생했습니다.", error);
+      alert("프로필 사진 변경 중 오류가 발생했습니다.");
+    }
+  };
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -78,8 +116,8 @@ const MyPage = () => {
           <h1 className="sec-main">My Page</h1>
           <div className="sec-img">
             <img
-              src={process.env.PUBLIC_URL + "/img/mypage.png"}
-              alt="mypage"
+              src={user.profilePicture ? `http://localhost:3011${user.profilePicture}` : `${process.env.PUBLIC_URL}/img/mypage.png`}
+              alt="Profile"
             />
           </div>
           <table>
@@ -98,6 +136,13 @@ const MyPage = () => {
               </tr>
             </tbody>
           </table>
+
+          <div className="profile-picture-change">
+            <h3>프로필 사진 변경</h3>
+            <input type="file" accept="image/*" onChange={handleProfilePictureChange} />
+            <button onClick={uploadProfilePictureHandler}>Upload Profile Picture</button>
+          </div>
+
           <div className="password-change">
             <h3>비밀번호 변경</h3>
             <input

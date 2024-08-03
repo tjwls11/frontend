@@ -24,6 +24,7 @@ CREATE TABLE `calendar` (
   `user_id` varchar(255) NOT NULL,
   `date` date NOT NULL,
   `color` varchar(7) DEFAULT NULL,
+  `sticker_url` varchar(2048) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `user_id_date` (`user_id`,`date`),
   CONSTRAINT `calendar_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE

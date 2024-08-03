@@ -7,7 +7,7 @@ import {
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { setMoodColor, fetchUserCalendar } from './api/api';
 
-const RenderSidebar = ({ isOpen, selectedDate, colors, stickers, handleMoodChange, closeSidebar }) => {
+const RenderSidebar = ({ isOpen, selectedDate, colors, handleMoodChange, closeSidebar }) => {
     if (!isOpen || !selectedDate) return null;
 
     return (
@@ -18,20 +18,9 @@ const RenderSidebar = ({ isOpen, selectedDate, colors, stickers, handleMoodChang
                     <button
                         key={index}
                         className="btn m-1"
-                        onClick={() => handleMoodChange(color, null)}
+                        onClick={() => handleMoodChange(color)}
                         style={{ backgroundColor: color }}
                     />
-                ))}
-            </div>
-            <div className="d-flex flex-wrap mt-3">
-                {stickers.map((sticker, index) => (
-                    <button
-                        key={index}
-                        className="btn m-1"
-                        onClick={() => handleMoodChange(null, sticker)}
-                    >
-                        <img src={sticker} alt="sticker" style={{ width: '20px', height: '20px' }} />
-                    </button>
                 ))}
             </div>
             <button className="btn btn-outline-secondary mt-3" onClick={closeSidebar}>
@@ -40,6 +29,7 @@ const RenderSidebar = ({ isOpen, selectedDate, colors, stickers, handleMoodChang
         </div>
     );
 };
+
 
 function Calendar() {
     const colors = ['#FFABAB', '#FFC3A0', '#FFF58E', '#CDE6A5', '#ACD1EA', '#9FB1D9', '#C8BFE7'];
@@ -62,6 +52,7 @@ function Calendar() {
     const [isEditingYearInYearlyView, setIsEditingYearInYearlyView] = useState(false);
 
     const token = localStorage.getItem('token');
+
 
     useEffect(() => {
         const initializeCalendar = async () => {

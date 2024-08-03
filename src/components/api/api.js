@@ -137,3 +137,19 @@ export const fetchUserCalendar = async (token) => {
       handleError('캘린더 데이터 조회 중 오류가 발생했습니다.', error);
   }
 };
+
+// 프로필 사진 업로드
+export const uploadProfilePicture = async (formData, token) => {
+  try {
+    const response = await axios.post(`${API_URL}/upload-profile-picture`, formData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('프로필 사진 업로드 중 오류가 발생했습니다.', error);
+    throw error;
+  }
+};
