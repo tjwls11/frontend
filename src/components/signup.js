@@ -1,5 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import background1 from '../images/background1.jpg';
+import background2 from '../images/background2.jpg';
+import background3 from '../images/background3.jpg';
 
 function Signup() {
   const [name, setName] = useState("");
@@ -10,6 +13,30 @@ function Signup() {
   const navigate = useNavigate();
 
   const isFormValid = name.trim() !== '' && userId.trim() !== '' && password.trim() !== '' && password === confirmPassword;
+
+  // 배경 이미지 목록을 useMemo로 메모이제이션
+  const backgrounds = React.useMemo(() => [
+    background1,
+    background2,
+    background3,
+  ], []);
+
+  // 랜덤 배경 이미지 설정
+  useEffect(() => {
+    const randomBackground = backgrounds[Math.floor(Math.random() * backgrounds.length)];
+    document.body.style.backgroundImage = `url(${randomBackground})`;
+    document.body.style.backgroundSize = 'cover'; // 배경 이미지 크기 조절
+    document.body.style.backgroundPosition = 'center'; // 배경 이미지 위치 설정
+    document.body.style.backgroundAttachment = 'fixed'; // 배경 이미지 고정
+
+    // 컴포넌트 언마운트 시 배경 이미지 초기화
+    return () => {
+      document.body.style.backgroundImage = '';
+      document.body.style.backgroundSize = '';
+      document.body.style.backgroundPosition = '';
+      document.body.style.backgroundAttachment = '';
+    };
+  }, [backgrounds]); // 빈 배열로 처음 렌더링 시 한 번만 실행
 
   const handleSignup = () => {
     if (!isFormValid) {

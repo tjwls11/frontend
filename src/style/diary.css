@@ -1,68 +1,114 @@
+@font-face {
+  font-family: 'RIDIBatang';
+  src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_twelve@1.0/RIDIBatang.woff')
+    format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
+body {
+  font-family: 'RIDIBatang', sans-serif;
+  background-color: #fffbe6;
+  color: #312c25;
+}
+
+/* Navbar styles */
+.navbar {
+  background-color: #fffbe6;
+}
+
+.navbar-brand,
+.navbar-nav .nav-link {
+  color: #312c25 !important;
+}
+
+.navbar-brand:hover,
+.navbar-nav .nav-link:hover {
+  color: #9ad6a8 !important;
+}
+
 /* Header styles */
-  h1 {
-    color: #312c25;
-  }
-  
-  .spantag {
-    color: #9ad6a8;
-  }
-  
-  h1 i {
-    margin-right: 10px;
-    color: #9ad6a8;
-  }
-  
-  .btn {
-    background-color: #9ad6a8;
-  }
-  
-  .btn:hover {
-    background-color: #529061;
-  }
-  
-  /* Table styles */
-  
-  .custom-thead {
-    background-color: #9ad6a8 !important;
-  }
-  
-  table thead.custom-thead th {
-    color: #fff !important;
-    background-color: #9ad6a8 !important;
-  }
-  
-  /* Form styles */
-  form {
-    background-color: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  }
-  
-  /* Card styles */
-  .card {
-    border: none;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  }
-  
-  .card-title {
-    color: #31a760;
-  }
-  
-  .card-subtitle {
-    color: #6c757d;
-  }
-  
-  .card-text {
-    color: #555;
-  }
-  
-  /* Margin adjustments */
-  .mt-5 {
-    margin-top: 3rem !important;
-  }
-  
-  .mb-5 {
-    margin-bottom: 3rem !important;
-  }
+h1 {
+  color: #312c25;
+}
+
+.spantag {
+  color: rgb(113, 165, 136);
+}
+
+h1 i {
+  margin-right: 10px;
+  color: rgb(113, 165, 136);
+}
+
+.btn {
+  background-color: rgb(113, 165, 136);
+}
+
+.btn:hover {
+  background-color: #529074;
+}
+
+/* Table styles */
+
+table thead.custom-thead th {
+  color: #fff !important;
+  background-color: rgb(113, 165, 136) !important;
+}
+
+table tbody.custom-tbody td {
+  background-color: #ffffff !important;
+  text-align: center;
+}
+
+.btn-del {
+  background-color: #7d706c;
+}
+
+.btn-del:hover {
+  background-color: #4a3c3c;
+}
+
+.btn-su {
+  background-color: rgba(85, 124, 103, 0.829);
+}
+
+.btn-su:hover {
+  background-color: rgb(55, 84, 68);
+}
+
+/* Form styles */
+form {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Card styles */
+.card {
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.card-title {
+  color: #31a760;
+}
+
+.card-subtitle {
+  color: #6c757d;
+}
+
+.card-text {
+  color: #555;
+}
+
+/* Margin adjustments */
+.mt-5 {
+  margin-top: 3rem !important;
+}
+
+.mb-5 {
+  margin-bottom: 3rem !important;
+}

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
-import { addDiary, checkDiaryAvailability } from './api/api'; // Import the required functions
+import { addDiary, checkDiaryAvailability } from './api/api'; // 필요한 함수 임포트
 
 function AddDiary() {
   const [date, setDate] = useState('');
@@ -11,18 +11,18 @@ function AddDiary() {
   const [diaryContent, setDiaryContent] = useState('');
   const [isDateAvailable, setIsDateAvailable] = useState(true);
   const navigate = useNavigate();
-  const token = localStorage.getItem('token'); // Get token from local storage
+  const token = localStorage.getItem('token'); // 로컬 스토리지에서 토큰 가져오기
 
   useEffect(() => {
     const checkDiaryAvailabilityAsync = async () => {
       if (date && token) {
         try {
           const checkData = await checkDiaryAvailability(date, token);
-          console.log('Diary availability check response:', checkData);
+          console.log('다이어리 유효성 검사 응답:', checkData);
           setIsDateAvailable(checkData.exists === false);
         } catch (error) {
-          console.error('Error checking diary availability:', error);
-          setIsDateAvailable(true); // Handle as available if there is an error
+          console.error('다이어리 유효성 검사 오류:', error);
+          setIsDateAvailable(true); // 오류 발생 시 유효한 것으로 처리
         }
       }
     };
@@ -45,15 +45,16 @@ function AddDiary() {
     }
 
     try {
-      const savedDiary = await addDiary(date, title, diaryContent, oneLine, token);
+      await addDiary(date, title, diaryContent, oneLine, token);
       alert('일기가 성공적으로 저장되었습니다.');
       setDate('');
       setTitle('');
       setOneLine('');
       setDiaryContent('');
-      navigate(`/detail-diary/${savedDiary.id}`);
+      // Diary 페이지로 이동
+      navigate('/diary');
     } catch (error) {
-      console.error('Error saving diary:', error);
+      console.error('일기 저장 오류:', error);
       alert('일기 저장 중 오류가 발생했습니다.');
     }
   };

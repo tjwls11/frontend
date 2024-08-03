@@ -83,13 +83,21 @@ export const fetchDiaries = async (token) => {
 };
 
 export const fetchDiary = async (id, token) => {
-  try {
-    const response = await axios.get(`${API_URL}/get-diary/${id}`, getAuthHeaders(token));
-    return response.data.diary;
-  } catch (error) {
-    handleError('다이어리 상세 조회 중 오류가 발생했습니다.', error);
+  const response = await fetch(`http://localhost:3011/get-diary/${id}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
   }
+
+  const data = await response.json();
+  console.log('Fetched diary:', data); // 데이터 구조 확인을 위해 콘솔에 출력
+  return data;
 };
+
 
 export const addDiary = async (date, title, content, one, token) => {
   try {

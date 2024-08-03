@@ -1,7 +1,8 @@
 .mainpage {
+  background: none; /* 배경을 제거 */
   font-family: 'RIDIBatang', sans-serif;
 }
-
+  
 .header-opacity {
   opacity: 0.9;
   padding: 20px;

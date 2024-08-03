@@ -7,6 +7,7 @@ import './style/calendar.css';
 import './style/navbar.css';
 import './style/diary.css';
 import './style/adddiary.css';
+import './style/mainpage.css'
 
 import App from './App';
 import { LoginProvider } from './context/LoginContext'; // 수정된 부분

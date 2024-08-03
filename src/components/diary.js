@@ -12,10 +12,12 @@ const formatDate = (dateString) => {
     return `${year}-${month}-${day}`;
 };
 
+// Diary 컴포넌트
 const Diary = () => {
     const [diaries, setDiaries] = useState([]);
     const token = localStorage.getItem('token'); // 저장된 JWT 토큰 가져오기
 
+    // 다이어리 목록을 가져오는 함수
     const fetchDiaries = useCallback(async () => {
         try {
             const response = await fetch('http://localhost:3011/get-diaries', {
@@ -35,10 +37,12 @@ const Diary = () => {
         }
     }, [token]);
 
+    // 컴포넌트가 마운트될 때 다이어리 목록을 가져옴
     useEffect(() => {
         fetchDiaries();
     }, [fetchDiaries]);
 
+    // 다이어리를 삭제하는 함수
     const handleDelete = async (id) => {
         try {
             const response = await fetch(`http://localhost:3011/delete-diary/${id}`, {
@@ -48,13 +52,12 @@ const Diary = () => {
                 }
             });
 
-            if (response.ok) {
-                setDiaries(diaries.filter((diary) => diary.id !== id));
-            } else {
-                // 서버 응답이 성공적이지 않은 경우
-                const errorMessage = await response.text(); // 응답 메시지 가져오기
-                console.error('Failed to delete the diary:', errorMessage);
+            if (!response.ok) {
+                const errorMessage = await response.text(); // 서버 응답 메시지 가져오기
+                throw new Error(`Failed to delete the diary: ${errorMessage}`);
             }
+
+            setDiaries(diaries.filter((diary) => diary.id !== id));
         } catch (error) {
             console.error('Error deleting diary:', error);
         }

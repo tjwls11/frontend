@@ -1,12 +1,38 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLogin } from '../context/LoginContext';
 import { useNavigate, Link } from 'react-router-dom';
+import background1 from '../images/background1.jpg';
+import background2 from '../images/background2.jpg';
+import background3 from '../images/background3.jpg';
 
 const Login = () => {
   const [credentials, setCredentials] = useState({ user_id: '', password: '' });
   const [loginError, setLoginError] = useState(''); // 로그인 오류 상태 추가
   const { login } = useLogin();
   const navigate = useNavigate();
+
+  // 랜덤 배경 이미지 설정
+  useEffect(() => {
+    const backgrounds = [
+      background1,
+      background2,
+      background3,
+    ];
+
+    const randomBackground = backgrounds[Math.floor(Math.random() * backgrounds.length)];
+    document.body.style.backgroundImage = `url(${randomBackground})`;
+    document.body.style.backgroundSize = 'cover'; // 배경 이미지 크기 조절
+    document.body.style.backgroundPosition = 'center'; // 배경 이미지 위치 설정
+    document.body.style.backgroundAttachment = 'fixed'; // 배경 이미지 고정
+
+    // 컴포넌트 언마운트 시 배경 이미지 초기화
+    return () => {
+      document.body.style.backgroundImage = '';
+      document.body.style.backgroundSize = '';
+      document.body.style.backgroundPosition = '';
+      document.body.style.backgroundAttachment = '';
+    };
+  }, []); // 빈 배열로 처음 렌더링 시 한 번만 실행
 
   // 입력값 변경 핸들러
   const handleChange = (e) => {
@@ -45,7 +71,7 @@ const Login = () => {
 
   return (
     <div className="page">
-      <div className="title">LOGIN</div>
+      <div className="title-login">LOGIN</div>
       <form className="content" onSubmit={handleSubmit}>
         <input
           className="input"

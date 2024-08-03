@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { fetchDiary, checkDiaryAvailability, editDiary } from './api/api';
+import 'bootstrap/dist/css/bootstrap.min.css';
+
 
 const DiaryEditPage = () => {
   const { id } = useParams();
@@ -8,7 +10,7 @@ const DiaryEditPage = () => {
   const [diary, setDiary] = useState({ title: '', date: '', content: '' });
   const [error, setError] = useState('');
 
-  const token = localStorage.getItem('token'); // 예: localStorage에서 토큰을 가져오는 방법
+  const token = localStorage.getItem('token');
 
   const fetchDiaryData = useCallback(async () => {
     if (!token) {
@@ -18,7 +20,7 @@ const DiaryEditPage = () => {
     
     try {
       const data = await fetchDiary(id, token);
-      
+
       // 날짜를 yyyy-MM-dd 포맷으로 변환
       const formattedDate = new Date(data.date).toISOString().split('T')[0];
       setDiary({ ...data, date: formattedDate });
@@ -54,7 +56,7 @@ const DiaryEditPage = () => {
 
       // Proceed to update the diary entry
       await editDiary(id, diary, token);
-      navigate('/'); // Navigate to the desired page after successful update
+      navigate(`/detail-diary/${id}`); // Navigate to the specific diary page after successful update
     } catch (error) {
       console.error('Error editing diary:', error);
       setError('일기 정보를 저장하는 중 오류가 발생했습니다.');
@@ -62,14 +64,24 @@ const DiaryEditPage = () => {
   };
 
   return (
-    <div className="container mt-5">
-      <h2>일기 수정</h2>
+    <div className="container mt-5 border border-secondary rounded-3 p-5 pb-7 shadow p-3 mb-5 bg-light">
+      <div className="header-container d-flex justify-content-between align-items-center mb-4">
+        <h1 className="display-4 fw-bold">
+          <i className="fa-solid fa-pen-nib" style={{ color: '#5f846e' }}></i>
+          일기 <span style={{ color: '#5f846e' }}>수정</span>
+        </h1>
+        <a
+          href="/diary"
+          className="btn btn-success text-white"
+          style={{ backgroundColor: '#5f846e', borderColor: '#5f846e' }}
+        >
+          홈으로
+        </a>
+      </div>
       {error && <div className="alert alert-danger">{error}</div>}
       <form>
-        <div className="mb-3">
-          <label htmlFor="title" className="form-label">
-            제목
-          </label>
+        <div className="mb-4">
+          <label htmlFor="title" className="form-label">제목</label>
           <input
             type="text"
             className="form-control"
@@ -80,10 +92,8 @@ const DiaryEditPage = () => {
             required
           />
         </div>
-        <div className="mb-3">
-          <label htmlFor="date" className="form-label">
-            날짜
-          </label>
+        <div className="mb-4">
+          <label htmlFor="date" className="form-label">날짜</label>
           <input
             type="date"
             className="form-control"
@@ -94,10 +104,8 @@ const DiaryEditPage = () => {
             required
           />
         </div>
-        <div className="mb-3">
-          <label htmlFor="content" className="form-label">
-            내용
-          </label>
+        <div className="mb-4">
+          <label htmlFor="content" className="form-label">내용</label>
           <textarea
             className="form-control"
             id="content"
@@ -110,10 +118,11 @@ const DiaryEditPage = () => {
         </div>
         <button
           type="button"
-          className="btn btn-primary"
+          className="btn btn-success text-white mt-4"
+          style={{ backgroundColor: '#5f846e', borderColor: '#5f846e' }}
           onClick={handleSaveEdit}
         >
-          수정
+          저장
         </button>
       </form>
     </div>

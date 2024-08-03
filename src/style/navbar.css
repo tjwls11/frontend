@@ -1,51 +1,42 @@
-/* 네비게이션 바 기본 스타일 */
+@font-face {
+  font-family: 'RIDIBatang';
+  src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_twelve@1.0/RIDIBatang.woff')
+    format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
 .navbar {
-    background-color: #333;
-    padding: 0.5rem 1rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    color: white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-family: 'RIDIBatang', sans-serif;
+}
+
+/* 로고 컨테이너 스타일 */
+.navbar-brand {
+  display: flex;
+  align-items: center;
+}
+
+/* 로고 이미지 스타일 */
+.logo-img {
+  height: 3rem; /* 기본 높이 */
+  margin-right: 0.1rem; /* 이미지와 글씨 사이의 간격 줄임 */
+}
+
+/* 미디어 쿼리: 화면 크기에 따라 로고 크기 조절 */
+@media (max-width: 576px) {
+  .logo-img {
+    height: 2.5rem; /* 작은 화면에서 로고 크기 조절 */
   }
-  
-  .navbar-links {
-    display: flex;
-    gap: 1rem;
+  .navbar-brand {
+    font-size: 1.75rem; /* 작은 화면에서 글씨 크기 조절 */
   }
-  
-  /* 네비게이션 링크 스타일 */
-  .navbar a {
-    color: white;
-    text-decoration: none;
-    font-size: 1rem;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+@media (min-width: 1200px) {
+  .logo-img {
+    height: 3.2rem; /* 큰 화면에서 로고 크기 조절 */
   }
-  
-  .navbar a:hover {
-    background-color: #555;
-    color: #fff;
+  .navbar-brand {
+    font-size: 2rem; /* 큰 화면에서 글씨 크기 조절 */
   }
-  
-  /* 로그아웃 버튼 스타일 */
-  .logout-button {
-    background-color: #dc3545;
-    border: none;
-    color: white;
-    font-size: 1rem;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-  }
-  
-  .logout-button:hover {
-    background-color: #c82333;
-  }
-  
-  .logout-button:focus {
-    outline: none;
-  }
-  
+}
