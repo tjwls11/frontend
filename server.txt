@@ -8,19 +8,19 @@ const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
+
 const app = express();
 const port = process.env.PORT || 3011;
 const saltRounds = 10;
 const secretKey = process.env.SECRET_KEY || 'default_secret';
 
 // CORS 설정
-const corsOptions = {
+app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-};
+}));
 
-app.use(cors(corsOptions));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -29,7 +29,7 @@ const dbConfig = {
   host: process.env.DB_HOST || 'localhost',
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || 'tjwls100',
-  database: process.env.DB_NAME || 'souldiary'
+  database: process.env.DB_NAME || 'souldiary',
 };
 
 const pool = mysql.createPool(dbConfig);
@@ -65,14 +65,26 @@ app.post('/signup', async (req, res) => {
   }
 
   try {
+    // user_id 중복 확인
+    const [rows] = await pool.query('SELECT COUNT(*) AS count FROM `user` WHERE `user_id` = ?', [user_id]);
+    if (rows[0].count > 0) {
+      return res.status(400).json({ isSuccess: false, message: '이미 사용 중인 ID입니다.' });
+    }
+
+    // 비밀번호 해싱
     const hash = await bcrypt.hash(password, saltRounds);
-    await pool.query('INSERT INTO `user` (`name`, `user_id`, `password`, `coin`, `profile_picture`) VALUES (?, ?, ?, ?, ?)', [name, user_id, hash, 5000, null]);
+    // 데이터베이스에 삽입
+    await pool.query(
+      'INSERT INTO `user` (`name`, `user_id`, `password`, `coin`, `profile_picture`) VALUES (?, ?, ?, ?, ?)', 
+      [name, user_id, hash, 5000, null]
+    );
     res.status(201).json({ isSuccess: true, message: '회원 가입 성공' });
   } catch (err) {
     console.error('회원 가입 오류:', err);
     res.status(500).json({ isSuccess: false, message: '서버 오류' });
   }
 });
+
 
 // 로그인 엔드포인트
 app.post('/login', async (req, res) => {
@@ -107,23 +119,20 @@ app.post('/login', async (req, res) => {
 // 사용자 정보 조회 엔드포인트
 app.get('/get-user-info', authenticateToken, async (req, res) => {
   try {
-    console.log(`Request received for user ID: ${req.user.user_id}`); // 요청된 사용자 ID 로그
     const [results] = await pool.query('SELECT name, user_id, coin, profile_picture FROM user WHERE user_id = ?', [req.user.user_id]);
 
     if (results.length === 0) {
-      console.log(`User not found for ID: ${req.user.user_id}`);
       return res.status(404).json({ isSuccess: false, message: '사용자를 찾을 수 없습니다.' });
     }
 
     const user = results[0];
-    console.log('User found:', user);
     res.json({
       isSuccess: true,
       user: {
         name: user.name,
         user_id: user.user_id,
         coin: user.coin,
-        profilePicture: user.profile_picture ? `/uploads/${path.basename(user.profile_picture)}` : null, // 상대 경로로 반환
+        profilePicture: user.profile_picture ? `/uploads/${path.basename(user.profile_picture)}` : null,
       },
     });
   } catch (error) {
@@ -231,6 +240,54 @@ app.delete('/delete-diary/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// 다이어리 날짜 확인 엔드포인트
+app.get('/checkDiary', authenticateToken, async (req, res) => {
+  const { date } = req.query;
+  const user_id = req.user.user_id;
+
+  if (!date) {
+    return res.status(400).json({ isSuccess: false, message: '날짜를 입력해 주세요.' });
+  }
+
+  try {
+    const [results] = await pool.query('SELECT * FROM `diary` WHERE `date` = ? AND `user_id` = ?', [date, user_id]);
+    const diaryExists = results.length > 0;
+    res.json({ isSuccess: true, exists: diaryExists });
+  } catch (err) {
+    console.error('다이어리 날짜 확인 오류:', err);
+    res.status(500).json({ isSuccess: false, message: '서버 오류' });
+  }
+});
+
+// 다이어리 수정 엔드포인트
+app.put('/edit-diary/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const { date, title, one, content } = req.body;
+  const user_id = req.user.user_id;
+
+  if (!date || !title || !one || !content) {
+    return res.status(400).json({ isSuccess: false, message: '모든 필드를 입력해 주세요.' });
+  }
+
+  try {
+    // 다이어리 수정 쿼리
+    const [result] = await pool.query(
+      'UPDATE `diary` SET `date` = ?, `title` = ?, `one` = ?, `content` = ? WHERE `id` = ? AND `user_id` = ?',
+      [date, title, one, content, id, user_id]
+    );
+
+    if (result.affectedRows > 0) {
+      res.json({ isSuccess: true, message: '다이어리가 성공적으로 수정되었습니다.' });
+    } else {
+      res.status(404).json({ isSuccess: false, message: '다이어리를 찾을 수 없습니다.' });
+    }
+  } catch (err) {
+    console.error('다이어리 수정 오류:', err);
+    res.status(500).json({ isSuccess: false, message: '서버 오류' });
+  }
+});
+
+
 // 색상 저장
 app.post('/set-mood-color', authenticateToken, async (req, res) => {
   const { date, color } = req.body;
@@ -249,6 +306,58 @@ app.post('/set-mood-color', authenticateToken, async (req, res) => {
     res.status(500).json({ isSuccess: false, message: '서버 오류' });
   }
 });
+
+app.post('/mood-tags', authenticateToken, async (req, res) => {
+  const { date, tag } = req.body;
+  const userId = req.user.user_id;
+
+  if (!date || !tag) {
+    return res.status(400).json({ isSuccess: false, message: '날짜와 태그는 필수입니다.' });
+  }
+
+  try {
+    const [result] = await pool.query(
+      'INSERT INTO `calendar` (`user_id`, `date`, `tag`) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE `tag` = VALUES(`tag`)',
+      [userId, date, tag]
+    );
+
+    console.log('Query result:', result); // 쿼리 결과 확인
+    if (result.affectedRows > 0) {
+      res.json({ isSuccess: true, message: '태그가 성공적으로 저장되었습니다.' });
+    } else {
+      res.status(500).json({ isSuccess: false, message: '태그 저장에 실패했습니다.' });
+    }
+  } catch (err) {
+    console.error('태그 저장 오류:', err.message);
+    res.status(500).json({ isSuccess: false, message: '서버 오류', error: err.message });
+  }
+});
+
+
+// 태그 조회 API
+app.get('/get-user-tags', authenticateToken, async (req, res) => {
+  const userId = req.user.user_id;
+
+  try {
+    const [rows] = await pool.query(
+      'SELECT date, tag FROM `calendar` WHERE user_id = ?',
+      [userId]
+    );
+
+    console.log('Query result:', rows); // 쿼리 결과 확인
+
+    if (rows.length > 0) {
+      res.json({ isSuccess: true, data: rows });
+    } else {
+      res.json({ isSuccess: true, data: [] });
+    }
+  } catch (err) {
+    console.error('태그 조회 오류:', err.message);
+    res.status(500).json({ isSuccess: false, message: '태그 데이터 조회 중 오류가 발생했습니다.', error: err.message });
+  }
+});
+
+
 
 // 색상 불러오기
 app.get('/get-user-calendar', authenticateToken, async (req, res) => {
@@ -273,7 +382,7 @@ const storage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     cb(null, Date.now() + path.extname(file.originalname));
-  }
+  },
 });
 
 const upload = multer({ storage });
