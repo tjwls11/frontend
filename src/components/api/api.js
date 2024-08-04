@@ -148,43 +148,21 @@ export const setMoodColor = async (date, color, token) => {
 };
 
 
-// 무드 태그 저장
-export const saveMoodTag = async (date, tag, token) => {
-  try {
-      const response = await axios.post(
-          `${API_URL}/mood-tags`,
-          { date, tag },
-          { headers: { Authorization: `Bearer ${token}` } }
-      );
-      return response.data;
-  } catch (error) {
-      console.error('Error saving mood tag:', error);
-      throw new Error('무드 태그 저장 중 오류가 발생했습니다.');
-  }
-};
-
 // 색상 조회
 export const fetchUserCalendar = async (token) => {
   try {
-    const response = await axios.get(`${API_URL}/get-user-calendar`, getAuthHeaders(token));
-    return response.data;
+      const response = await axios.get('http://localhost:3011/get-user-calendar', {
+          headers: {
+              Authorization: `Bearer ${token}`
+          }
+      });
+      return response.data;
   } catch (error) {
-    handleError('캘린더 데이터 조회 중 오류가 발생했습니다.', error);
+      handleError(error);
   }
 };
 
-// 태그 조회
-export const fetchUserTags = async (token) => {
-  try {
-    const response = await axios.get(`${API_URL}/get-user-tags`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('태그 데이터 조회 중 오류가 발생했습니다.', error);
-    throw new Error('태그 데이터 로딩 실패: 응답 데이터 없음');
-  }
-};
+
 // 프로필 사진 업로드
 export const uploadProfilePicture = async (formData, token) => {
   try {

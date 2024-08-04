@@ -1,24 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays,
+import {
+    format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays,
     isSameMonth, eachMonthOfInterval, startOfYear, endOfYear, addYears, subYears, setMonth, setYear,
-    isSameDay, isAfter } from 'date-fns';
+    isAfter
+} from 'date-fns';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { setMoodColor, fetchUserCalendar, saveMoodTag } from './api/api';
+import { setMoodColor, fetchUserCalendar } from './api/api';
 
 const RenderSidebar = ({ isOpen, selectedDate, colors, handleMoodChange, closeSidebar }) => {
-    const [moodTag, setMoodTag] = useState('');
-
     if (!isOpen || !selectedDate) return null;
-
-    const handleSaveMoodTag = () => {
-        handleMoodChange(null, moodTag);
-        setMoodTag('');
-    };
 
     return (
         <div className="sidebar">
             <h2>{format(selectedDate, 'yyyy-MM-dd')}</h2>
-            <div className="d-flex flex-wrap mb-3">
+            <div className="d-flex flex-wrap">
                 {colors.map((color, index) => (
                     <button
                         key={index}
@@ -27,21 +22,6 @@ const RenderSidebar = ({ isOpen, selectedDate, colors, handleMoodChange, closeSi
                         style={{ backgroundColor: color }}
                     />
                 ))}
-            </div>
-            <div className="mb-3">
-                <input
-                    type="text"
-                    value={moodTag}
-                    onChange={(e) => setMoodTag(e.target.value)}
-                    placeholder="Enter mood tag..."
-                    className="form-control"
-                />
-                <button
-                    className="btn btn-primary mt-2"
-                    onClick={handleSaveMoodTag}
-                >
-                    Save Mood Tag
-                </button>
             </div>
             <button className="btn btn-outline-secondary mt-3" onClick={closeSidebar}>
                 Close
@@ -56,7 +36,7 @@ function Calendar() {
     const [currentMonth, setCurrentMonth] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState(null);
     const [moodColors, setMoodColors] = useState({});
-    const [moodTags, setMoodTags] = useState({});
+    const [moodStickers, setMoodStickers] = useState({});
     const [today, setToday] = useState(new Date());
     const [isEditingMonth, setIsEditingMonth] = useState(false);
     const [inputMonth, setInputMonth] = useState(format(new Date(), 'M'));
@@ -65,41 +45,44 @@ function Calendar() {
     const [isYearlyView, setIsYearlyView] = useState(false);
     const [currentYear, setCurrentYear] = useState(new Date());
     const [isEditingYearInYearlyView, setIsEditingYearInYearlyView] = useState(false);
+    const [hoveredDate, setHoveredDate] = useState(null);
 
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token'); // Directly use the token
 
     useEffect(() => {
         const initializeCalendar = async () => {
-            if (!token) return;
             try {
-                const calendarData = await fetchUserCalendar(token);
-                if (calendarData?.isSuccess) {
-                    const colorsData = {};
-                    const tagsData = {};
-                    calendarData.data.forEach(entry => {
-                        const dateStr = format(new Date(entry.date), 'yyyy-MM-dd');
-                        colorsData[dateStr] = entry.color;
-                        tagsData[dateStr] = entry.tag;
+                const response = await fetchUserCalendar(token);
+                if (response.isSuccess && Array.isArray(response.calendar)) {
+                    console.log('Received calendar data:', response.calendar);
+                    const colors = {};
+                    const stickers = {};
+                    response.calendar.forEach(item => {
+                        const dateStr = format(new Date(item.date), 'yyyy-MM-dd');
+                        colors[dateStr] = item.color;
+                        // 스티커는 서버 데이터에 따라 다를 수 있으므로, 필요한 경우 추가적인 데이터가 있어야 함
                     });
-                    setMoodColors(colorsData);
-                    setMoodTags(tagsData);
+                    setMoodColors(colors);
+                    setMoodStickers(stickers); // 현재는 스티커가 없음, 필요 시 추가
                 } else {
-                    console.error('캘린더 데이터 조회 실패:', calendarData?.message || '응답 데이터 없음');
+                    console.error('Invalid calendar data format:', response);
                 }
             } catch (error) {
-                console.error('Error initializing calendar data:', error.message || error);
+                console.error('Error initializing calendar data:', error);
             }
         };
 
-        initializeCalendar();
+        if (token) {
+            initializeCalendar();
+        }
     }, [token]);
 
     useEffect(() => {
         setToday(new Date());
         const storedMoodColors = JSON.parse(localStorage.getItem('moodColors')) || {};
-        const storedMoodTags = JSON.parse(localStorage.getItem('moodTags')) || {};
+        const storedMoodStickers = JSON.parse(localStorage.getItem('moodStickers')) || {};
         setMoodColors(storedMoodColors);
-        setMoodTags(storedMoodTags);
+        setMoodStickers(storedMoodStickers);
     }, []);
 
     useEffect(() => {
@@ -107,8 +90,8 @@ function Calendar() {
     }, [moodColors]);
 
     useEffect(() => {
-        localStorage.setItem('moodTags', JSON.stringify(moodTags));
-    }, [moodTags]);
+        localStorage.setItem('moodStickers', JSON.stringify(moodStickers));
+    }, [moodStickers]);
 
     const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
     const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
@@ -116,48 +99,27 @@ function Calendar() {
     const nextYear = () => setCurrentYear(addYears(currentYear, 1));
 
     const onDateClick = (day) => {
-        if (isAfter(day, today)) return;
-        setSelectedDate(day);
-        setIsSidebarOpen(true);
+        if (!isAfter(day, today)) {
+            setSelectedDate(day);
+            setIsSidebarOpen(true);
+        }
     };
 
-    const handleMoodChange = async (color, tag) => {
-        if (!selectedDate) return;
-
-        const dateStr = format(selectedDate, 'yyyy-MM-dd');
-        const updateMoodColor = async () => {
-            if (color) {
-                setMoodColors(prevColors => ({
-                    ...prevColors,
-                    [dateStr]: color,
-                }));
-                try {
-                    if (!token) throw new Error('Token not provided.');
-                    await setMoodColor(dateStr, color, token);
-                    console.log('Mood color saved to server');
-                } catch (error) {
-                    console.error('Error saving mood color:', error);
-                }
+    const handleMoodChange = async (color) => {
+        if (selectedDate) {
+            const dateStr = format(selectedDate, 'yyyy-MM-dd');
+            setMoodColors(prevColors => ({
+                ...prevColors,
+                [dateStr]: color || prevColors[dateStr],
+            }));
+            try {
+                if (!token) throw new Error('Token not provided.');
+                await setMoodColor(dateStr, color, token);
+                console.log('Mood saved to server');
+            } catch (error) {
+                console.error('Error saving mood:', error);
             }
-        };
-
-        const updateMoodTag = async () => {
-            if (tag) {
-                setMoodTags(prevTags => ({
-                    ...prevTags,
-                    [dateStr]: tag,
-                }));
-                try {
-                    if (!token) throw new Error('Token not provided.');
-                    await saveMoodTag(dateStr, tag, token);
-                    console.log('Mood tag saved to server');
-                } catch (error) {
-                    console.error('Error saving mood tag:', error);
-                }
-            }
-        };
-
-        await Promise.all([updateMoodColor(), updateMoodTag()]);
+        }
     };
 
     const handleMonthChange = () => {
@@ -221,7 +183,7 @@ function Calendar() {
         );
     };
 
-    const RenderCells = ({ currentMonth, moodColors, onDateClick, selectedDate }) => {
+    const RenderCells = ({ currentMonth, moodColors, moodStickers, onDateClick }) => {
         const monthStart = startOfMonth(currentMonth);
         const monthEnd = endOfMonth(monthStart);
         const startDate = startOfWeek(monthStart);
@@ -237,15 +199,25 @@ function Calendar() {
                 const currentDay = day;
                 const dayKey = format(currentDay, 'yyyy-MM-dd');
                 const color = moodColors[dayKey];
+                const sticker = moodStickers[dayKey];
 
                 days.push(
                     <div
-                        className={`col text-center p-2 calendar-cell ${isSameMonth(currentDay, monthStart) ? '' : 'text-muted'} ${isSameDay(currentDay, selectedDate) ? 'selected' : ''}`}
+                        className={`col text-center p-2 ${isSameMonth(currentDay, monthStart) ? '' : 'text-muted'}`}
                         key={currentDay}
                         onClick={() => onDateClick(currentDay)}
+                        onMouseEnter={() => setHoveredDate(currentDay)}
+                        onMouseLeave={() => setHoveredDate(null)}
                         style={{ backgroundColor: color }}
                     >
                         <span>{format(currentDay, 'd')}</span>
+                        {sticker && <img src={sticker} alt="sticker" className="sticker" />}
+                        {/* 요약 정보 표시 */}
+                        {hoveredDate && isSameMonth(currentDay, currentMonth) && (
+                            <div className="tooltip" style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)' }}>
+                                {moodColors[dayKey] ? `Mood: ${moodColors[dayKey]}` : 'No mood recorded'}
+                            </div>
+                        )}
                     </div>
                 );
 
@@ -278,8 +250,8 @@ function Calendar() {
                         <RenderCells
                             currentMonth={month}
                             moodColors={moodColors}
+                            moodStickers={moodStickers}
                             onDateClick={onDateClick}
-                            selectedDate={selectedDate} // 전달된 selectedDate로 수정
                         />
                     </div>
                 ))}
@@ -287,7 +259,7 @@ function Calendar() {
         );
     };
 
-    const handleYearlyViewToggle = () => setIsYearlyView(prev => !prev);
+    const handleYearlyViewToggle = () => setIsYearlyView(!isYearlyView);
 
     const RenderYearlyViewHeader = ({ currentYear, prevYear, nextYear }) => (
         <div className="d-flex justify-content-between align-items-center mb-3">
@@ -328,6 +300,7 @@ function Calendar() {
                     <RenderYearlyView
                         currentYear={currentYear}
                         moodColors={moodColors}
+                        moodStickers={moodStickers}
                         onDateClick={onDateClick}
                     />
                 </>
@@ -342,8 +315,8 @@ function Calendar() {
                     <RenderCells
                         currentMonth={currentMonth}
                         moodColors={moodColors}
+                        moodStickers={moodStickers}
                         onDateClick={onDateClick}
-                        selectedDate={selectedDate}
                     />
                 </>
             )}

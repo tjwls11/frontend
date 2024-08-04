@@ -48,9 +48,6 @@ const Navbar = () => {
                 <li className="nav-item">
                   <Link className="nav-link" to="/mypage">My Page</Link>
                 </li>
-                <li className="nav-item">
-                  <Link className="nav-link" to="/MoodPage">MoodPage</Link>
-                </li>
               </>
             ) : (
               <>
