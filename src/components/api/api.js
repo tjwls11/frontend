@@ -83,21 +83,13 @@ export const fetchDiaries = async (token) => {
 };
 
 export const fetchDiary = async (id, token) => {
-  const response = await fetch(`http://localhost:3011/get-diary/${id}`, {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
+  try {
+    const response = await axios.get(`${API_URL}/get-diary/${id}`, getAuthHeaders(token));
+    return response.data;
+  } catch (error) {
+    handleError('다이어리 상세 조회 중 오류가 발생했습니다.', error);
   }
-
-  const data = await response.json();
-  console.log('Fetched diary:', data); // 데이터 구조 확인을 위해 콘솔에 출력
-  return data;
 };
-
 
 export const addDiary = async (date, title, content, one, token) => {
   try {
@@ -119,31 +111,20 @@ export const deleteDiary = async (id, token) => {
 
 // 다이어리 수정
 export const editDiary = async (id, diaryData, token) => {
-  const url = `http://localhost:3011/edit-diary/${id}`;
   try {
-    const response = await axios.put(url, diaryData, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
+    const response = await axios.put(`${API_URL}/edit-diary/${id}`, diaryData, getAuthHeaders(token));
     return response.data;
   } catch (error) {
-    throw new Error(`다이어리 수정 중 오류가 발생했습니다. - Status: ${error.response?.status}, Message: ${error.message}`);
+    handleError('다이어리 수정 중 오류가 발생했습니다.', error);
   }
 };
 
-
-// 날짜별 다이어리 체크 API 호출
+// 날짜별 다이어리 체크
 export const checkDiaryAvailability = async (date, token) => {
   try {
     const response = await axios.get(`${API_URL}/checkDiary`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      params: {
-        date,
-      },
+      ...getAuthHeaders(token),
+      params: { date },
     });
     return response.data;
   } catch (error) {
@@ -151,17 +132,38 @@ export const checkDiaryAvailability = async (date, token) => {
   }
 };
 
-// 색상 저장 API 호출
+// 무드 색상 저장
 export const setMoodColor = async (date, color, token) => {
   try {
-    const response = await axios.post(`${API_URL}/set-mood-color`, { date, color }, getAuthHeaders(token));
-    return response.data;
+      const response = await axios.post(
+          `${API_URL}/mood-colors`,
+          { date, color },
+          { headers: { Authorization: `Bearer ${token}` } }
+      );
+      return response.data;
   } catch (error) {
-    handleError('무드 색상 설정 중 오류가 발생했습니다.', error);
+      console.error('Error setting mood color:', error);
+      throw new Error('무드 색상 저장 중 오류가 발생했습니다.');
   }
 };
 
-// 색상 조회 API 호출
+
+// 무드 태그 저장
+export const saveMoodTag = async (date, tag, token) => {
+  try {
+      const response = await axios.post(
+          `${API_URL}/mood-tags`,
+          { date, tag },
+          { headers: { Authorization: `Bearer ${token}` } }
+      );
+      return response.data;
+  } catch (error) {
+      console.error('Error saving mood tag:', error);
+      throw new Error('무드 태그 저장 중 오류가 발생했습니다.');
+  }
+};
+
+// 색상 조회
 export const fetchUserCalendar = async (token) => {
   try {
     const response = await axios.get(`${API_URL}/get-user-calendar`, getAuthHeaders(token));
@@ -171,12 +173,24 @@ export const fetchUserCalendar = async (token) => {
   }
 };
 
+// 태그 조회
+export const fetchUserTags = async (token) => {
+  try {
+    const response = await axios.get(`${API_URL}/get-user-tags`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('태그 데이터 조회 중 오류가 발생했습니다.', error);
+    throw new Error('태그 데이터 로딩 실패: 응답 데이터 없음');
+  }
+};
 // 프로필 사진 업로드
 export const uploadProfilePicture = async (formData, token) => {
   try {
     const response = await axios.post(`${API_URL}/upload-profile-picture`, formData, {
       headers: {
-        Authorization: `Bearer ${token}`,
+        ...getAuthHeaders(token).headers,
         'Content-Type': 'multipart/form-data',
       },
     });

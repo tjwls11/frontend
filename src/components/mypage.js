@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { fetchUserInfo, changePassword, uploadProfilePicture } from './api/api';
+import React, { useState, useEffect } from "react";
+import { fetchUserInfo, changePassword, uploadProfilePicture } from "./api/api";
 
 const MyPage = () => {
   const [user, setUser] = useState(null);
@@ -11,7 +11,7 @@ const MyPage = () => {
 
   // 사용자 정보를 가져오는 함수
   const getUserInfo = async () => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (!token) {
       alert("로그인이 필요합니다.");
       window.location.href = "/Login";
@@ -22,7 +22,7 @@ const MyPage = () => {
       const response = await fetchUserInfo(token);
       if (response.isSuccess) {
         setUser(response.user);
-        localStorage.setItem('user', JSON.stringify(response.user));
+        localStorage.setItem("user", JSON.stringify(response.user));
       } else {
         setError("유저 정보 요청 중 오류가 발생했습니다.");
       }
@@ -44,7 +44,7 @@ const MyPage = () => {
       return;
     }
 
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (!token) {
       alert("로그인이 필요합니다.");
       return;
@@ -71,14 +71,14 @@ const MyPage = () => {
       return;
     }
 
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (!token) {
       alert("로그인이 필요합니다.");
       return;
     }
 
     const formData = new FormData();
-    formData.append('profilePicture', profilePicture);
+    formData.append("profilePicture", profilePicture);
 
     try {
       const response = await uploadProfilePicture(formData, token);
@@ -111,12 +111,16 @@ const MyPage = () => {
 
   return (
     <div className="mypage">
-      <section className="sec">
+      <section className="sec-mypage">
         <div className="sec-box">
-          <h1 className="sec-main">My Page</h1>
+          <h1 className="sec-mainname">My Page</h1>
           <div className="sec-img">
             <img
-              src={user.profilePicture ? `http://localhost:3011${user.profilePicture}` : `${process.env.PUBLIC_URL}/img/mypage.png`}
+              src={
+                user.profilePicture
+                  ? `http://localhost:3011${user.profilePicture}`
+                  : `${process.env.PUBLIC_URL}/img/mypage.png`
+              }
               alt="Profile"
             />
           </div>
@@ -124,23 +128,33 @@ const MyPage = () => {
             <tbody>
               <tr>
                 <th className="name">이름</th>
-                <td>{user.name || '정보 없음'}</td>
+                <td>{user.name || "정보 없음"}</td>
               </tr>
               <tr>
                 <th className="name">아이디</th>
-                <td>{user.user_id || '정보 없음'}</td>
+                <td>{user.user_id || "정보 없음"}</td>
               </tr>
               <tr>
                 <th className="name">내 코인</th>
-                <td>{user.coin || '0'}</td>
+                <td>{user.coin || "0"}</td>
               </tr>
             </tbody>
           </table>
 
           <div className="profile-picture-change">
             <h3>프로필 사진 변경</h3>
-            <input type="file" accept="image/*" onChange={handleProfilePictureChange} />
-            <button onClick={uploadProfilePictureHandler}>Upload Profile Picture</button>
+            <input
+              className="input"
+              type="file"
+              accept="image/*"
+              onChange={handleProfilePictureChange}
+            />
+            <button
+              className="Change-button-mypage"
+              onClick={uploadProfilePictureHandler}
+            >
+              Upload Profile Picture
+            </button>
           </div>
 
           <div className="password-change">
@@ -159,7 +173,12 @@ const MyPage = () => {
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
             />
-            <button className="Change-button" onClick={handleChangePassword}>Change Password</button>
+            <button
+              className="Change-button-mypage"
+              onClick={handleChangePassword}
+            >
+              Change Password
+            </button>
           </div>
         </div>
       </section>

@@ -10,6 +10,7 @@ import Diary from './components/diary';
 import AddDiary from './components/adddiary';
 import DetailDiary from './components/detaildiary';
 import DiaryEditPage from './components/DiaryEditPage';
+import MoodPage from './components/MoodPage'
 import { LoginProvider } from './context/LoginContext';
 
 const App = () => {
@@ -27,6 +28,7 @@ const App = () => {
           <Route path="/detail-diary/:id" element={<DetailDiary />} /> {/* Adjusted path */}
           <Route path="/add-diary" element={<AddDiary />} />
           <Route path="/edit-diary/:id" element={<DiaryEditPage />} />
+          <Route path='/MoodPage' element={<MoodPage />} />
         </Routes>
       </Router>
     </LoginProvider>

@@ -4,7 +4,6 @@ import { useLogin } from '../context/LoginContext'; // Import the custom hook fo
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 
-
 const Navbar = () => {
   const { user, logout } = useLogin(); // Get user information and logout function from context
   const navigate = useNavigate(); // Hook to navigate programmatically
@@ -48,6 +47,9 @@ const Navbar = () => {
                 </li>
                 <li className="nav-item">
                   <Link className="nav-link" to="/mypage">My Page</Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/MoodPage">MoodPage</Link>
                 </li>
               </>
             ) : (
