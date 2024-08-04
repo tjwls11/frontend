@@ -118,7 +118,7 @@ const MyPage = () => {
             <img
               src={
                 user.profilePicture
-                  ? `http://43.200.233.44:3011${user.profilePicture}`
+                  ? `https://43.200.233.44:3011${user.profilePicture}`
                   : `${process.env.PUBLIC_URL}/img/mypage.png`
               }
               alt="Profile"

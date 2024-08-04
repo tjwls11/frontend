@@ -46,7 +46,7 @@ const Login = () => {
     setLoginError(''); // 로그인 시 오류 초기화
 
     try {
-      const response = await fetch('http://43.200.233.44:3011/login', {
+      const response = await fetch('https://43.200.233.44:3011/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(credentials),

@@ -49,7 +49,7 @@ function Signup() {
     };
 
     try {
-      const response = await fetch("http://43.200.233.44:3011/signup", {
+      const response = await fetch("https://43.200.233.44:3011/signup", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
