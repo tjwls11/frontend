@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import background1 from '../images/background1.jpg';
 import background2 from '../images/background2.jpg';
@@ -12,69 +12,67 @@ function Signup() {
   const [signupError, setSignupError] = useState("");
   const navigate = useNavigate();
 
-  const isFormValid = name.trim() !== '' && userId.trim() !== '' && password.trim() !== '' && password === confirmPassword;
+  const isFormValid = useMemo(() => (
+    name.trim() !== '' &&
+    userId.trim() !== '' &&
+    password.trim() !== '' &&
+    password === confirmPassword
+  ), [name, userId, password, confirmPassword]);
 
-  // 배경 이미지 목록을 useMemo로 메모이제이션
-  const backgrounds = React.useMemo(() => [
-    background1,
-    background2,
-    background3,
-  ], []);
+  const backgrounds = useMemo(() => [background1, background2, background3], []);
 
-  // 랜덤 배경 이미지 설정
   useEffect(() => {
     const randomBackground = backgrounds[Math.floor(Math.random() * backgrounds.length)];
     document.body.style.backgroundImage = `url(${randomBackground})`;
-    document.body.style.backgroundSize = 'cover'; // 배경 이미지 크기 조절
-    document.body.style.backgroundPosition = 'center'; // 배경 이미지 위치 설정
-    document.body.style.backgroundAttachment = 'fixed'; // 배경 이미지 고정
+    document.body.style.backgroundSize = 'cover';
+    document.body.style.backgroundPosition = 'center';
+    document.body.style.backgroundAttachment = 'fixed';
 
-    // 컴포넌트 언마운트 시 배경 이미지 초기화
     return () => {
       document.body.style.backgroundImage = '';
       document.body.style.backgroundSize = '';
       document.body.style.backgroundPosition = '';
       document.body.style.backgroundAttachment = '';
     };
-  }, [backgrounds]); // 빈 배열로 처음 렌더링 시 한 번만 실행
+  }, [backgrounds]);
 
-  const handleSignup = () => {
+  const handleSignup = async () => {
     if (!isFormValid) {
       setSignupError("모든 필드를 올바르게 입력해주세요.");
       return;
     }
 
     const userData = {
-      name: name,
+      name,
       user_id: userId,
-      password: password,
+      password,
     };
 
-    fetch("http://localhost:3011/signup", { // 변경된 포트와 경로
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(userData),
-    })
-      .then((res) => {
-        if (!res.ok) {
-          return res.json().then(err => { throw err });
-        }
-        return res.json();
-      })
-      .then((json) => {
-        if (json.isSuccess) {
-          alert('회원가입이 완료되었습니다!');
-          navigate("/"); // 회원가입 완료 후 로그인 페이지로 이동
-        } else {
-          setSignupError(json.message); // 실패 메시지 처리
-        }
-      })
-      .catch((error) => {
-        console.error("Error:", error);
-        setSignupError(error.message || "회원가입 중 오류가 발생했습니다.");
+    try {
+      const response = await fetch("http://localhost:3011/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(userData),
       });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "서버 오류");
+      }
+
+      const result = await response.json();
+      if (result.isSuccess) {
+        alert('회원가입이 완료되었습니다!');
+        navigate("/"); // 회원가입 완료 후 로그인 페이지로 이동
+      } else {
+        setSignupError(result.message);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      setSignupError(error.message || "회원가입 중 오류가 발생했습니다.");
+    }
   };
 
   return (

@@ -1,9 +1,24 @@
 import React, { useEffect, useState } from 'react';
-import HeatMap from 'react-heatmap-grid'; // 'react-heatmap-grid'로 확인한 정확한 컴포넌트 이름
+import { Line, Bar } from 'react-chartjs-2';
 import { fetchUserTags } from './api/api';
 import { Container, Row, Col, Alert, Card } from 'react-bootstrap';
+import { Chart, registerables } from 'chart.js';
 
-const MoodChart = ({ moodColors = {} }) => {
+// Chart.js의 모든 기본 구성요소 등록
+Chart.register(...registerables);
+
+const positiveKeywords = ['행복', '기쁨'];
+const neutralKeywords = ['중립'];
+const negativeKeywords = ['슬픔', '우울'];
+
+const getEmotionScore = (tag) => {
+    if (positiveKeywords.includes(tag)) return 1;
+    if (neutralKeywords.includes(tag)) return 0;
+    if (negativeKeywords.includes(tag)) return -1;
+    return 0; // 기본값
+};
+
+const MoodChart = () => {
     const [moodTags, setMoodTags] = useState([]);
     const [error, setError] = useState('');
 
@@ -17,47 +32,50 @@ const MoodChart = ({ moodColors = {} }) => {
                         setMoodTags(response.data.filter(tag => tag.tag));
                     } else {
                         setError(response?.message || '태그 데이터 로딩 실패');
-                        console.error('태그 데이터 로딩 실패:', response?.message || '응답 데이터 없음');
                     }
                 } else {
                     setError('토큰이 없습니다.');
-                    console.error('토큰이 없습니다.');
                 }
             } catch (error) {
                 setError('태그 데이터 로딩 중 오류 발생');
-                console.error('태그 데이터 로딩 중 오류 발생:', error.message || error);
             }
         };
 
         loadMoodTags();
     }, []);
 
-    // 태그 빈도수 계산하기
-    const tagCounts = moodTags.reduce((acc, { tag }) => {
+    const tagCounts = moodTags.reduce((acc, { date, tag }) => {
         if (tag) {
-            acc[tag] = (acc[tag] || 0) + 1;
+            acc[date] = acc[date] || {};
+            acc[date][tag] = (acc[date][tag] || 0) + 1;
         }
         return acc;
     }, {});
 
-    const data = Object.entries(tagCounts).map(([tag, count]) => ({
-        tag,
-        count,
-    }));
+    const scoreCounts = Object.entries(tagCounts).map(([date, tags]) => {
+        const totalScore = Object.entries(tags).reduce((sum, [tag, count]) => {
+            return sum + getEmotionScore(tag) * count;
+        }, 0);
+        return { date, score: totalScore };
+    });
 
-    const tags = data.map(item => item.tag);
-    const counts = data.map(item => item.count);
+    const lineData = {
+        labels: scoreCounts.map(item => item.date),
+        datasets: [{
+            label: '감정 점수',
+            data: scoreCounts.map(item => item.score),
+            borderColor: 'rgba(75,192,192,1)',
+            fill: false,
+        }],
+    };
 
-    // 히트맵 데이터를 2차원 배열로 변환
-    const heatmapData = [counts.map(() => counts)]; // 모든 태그의 빈도수를 가진 2차원 배열
-
-    // 기본 색상 설정 (선택적)
-    const defaultColor = '#e0e0e0'; // 기본 색상
-    const getColor = (value) => {
-        // 값에 따라 색상을 다르게 설정할 수 있음
-        if (value > 5) return '#ff5733'; // 예: 빈도가 5를 초과하면 빨간색
-        if (value > 1) return '#ffc300'; // 예: 빈도가 1을 초과하면 노란색
-        return defaultColor; // 기본 색상
+    const barData = {
+        labels: Object.keys(tagCounts),
+        datasets: Object.entries(tagCounts).map(([date, tags]) => ({
+            label: date,
+            data: Object.values(tags),
+            backgroundColor: 'rgba(75,192,192,0.4)',
+        })),
     };
 
     return (
@@ -65,27 +83,22 @@ const MoodChart = ({ moodColors = {} }) => {
             {error && <Alert variant="danger">{error}</Alert>}
             <Row className="mb-4">
                 <Col md={12}>
-                    {tags.length > 0 && (
-                        <Card>
-                            <Card.Header as="h5">감정 태그 히트맵</Card.Header>
-                            <Card.Body>
-                                <div style={{ height: '400px', width: '100%' }}>
-                                    <HeatMap
-                                        data={heatmapData}
-                                        xLabels={tags}
-                                        yLabels={['빈도수']}
-                                        cellStyle={(value) => ({
-                                            background: getColor(value),
-                                            fontSize: '11px',
-                                        })}
-                                    />
-                                </div>
-                            </Card.Body>
-                        </Card>
-                    )}
+                    <Card>
+                        <Card.Header as="h5">감정 점수 선 그래프</Card.Header>
+                        <Card.Body>
+                            <Line data={lineData} />
+                        </Card.Body>
+                    </Card>
+                </Col>
+                <Col md={12}>
+                    <Card>
+                        <Card.Header as="h5">감정 태그 빈도수 막대 그래프</Card.Header>
+                        <Card.Body>
+                            <Bar data={barData} />
+                        </Card.Body>
+                    </Card>
                 </Col>
             </Row>
-            {/* 다른 차트들도 동일하게 유지 */}
         </Container>
     );
 };
