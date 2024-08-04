@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // 기본 API URL
-const API_URL = process.env.API_URL || 'http://localhost:3011';
+const API_URL = process.env.API_URL || 'http://43.200.233.44:3011';
 
 // 공통 요청 헤더
 const getAuthHeaders = (token) => {
@@ -151,7 +151,7 @@ export const setMoodColor = async (date, color, token) => {
 // 색상 조회
 export const fetchUserCalendar = async (token) => {
   try {
-      const response = await axios.get('http://localhost:3011/get-user-calendar', {
+      const response = await axios.get('http://43.200.233.44:3011/get-user-calendar', {
           headers: {
               Authorization: `Bearer ${token}`
           }

@@ -20,7 +20,7 @@ const Diary = () => {
     // 다이어리 목록을 가져오는 함수
     const fetchDiaries = useCallback(async () => {
         try {
-            const response = await fetch('http://localhost:3011/get-diaries', {
+            const response = await fetch('http://43.200.233.44:3011/get-diaries', {
                 headers: {
                     'Authorization': `Bearer ${token}` // JWT 토큰을 Authorization 헤더에 포함
                 }
@@ -45,7 +45,7 @@ const Diary = () => {
     // 다이어리를 삭제하는 함수
     const handleDelete = async (id) => {
         try {
-            const response = await fetch(`http://localhost:3011/delete-diary/${id}`, {
+            const response = await fetch(`http://43.200.233.44:3011/delete-diary/${id}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}` // JWT 토큰을 Authorization 헤더에 포함
