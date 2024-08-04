@@ -112,7 +112,7 @@ export const deleteDiary = async (id, token) => {
 // 다이어리 수정
 export const editDiary = async (id, diaryData, token) => {
   try {
-    const response = await axios.put(`${API_URL}/edit-diary/${id}`, diaryData, getAuthHeaders(token));
+    const response = await axios.put(`${API_URL}/update-diary/${id}`, diaryData, getAuthHeaders(token));
     return response.data;
   } catch (error) {
     handleError('다이어리 수정 중 오류가 발생했습니다.', error);
@@ -122,7 +122,7 @@ export const editDiary = async (id, diaryData, token) => {
 // 날짜별 다이어리 체크
 export const checkDiaryAvailability = async (date, token) => {
   try {
-    const response = await axios.get(`${API_URL}/checkDiary`, {
+    const response = await axios.get(`${API_URL}/check-diary`, {
       ...getAuthHeaders(token),
       params: { date },
     });
@@ -135,33 +135,27 @@ export const checkDiaryAvailability = async (date, token) => {
 // 무드 색상 저장
 export const setMoodColor = async (date, color, token) => {
   try {
-      const response = await axios.post(
-          `${API_URL}/mood-colors`,
-          { date, color },
-          { headers: { Authorization: `Bearer ${token}` } }
-      );
-      return response.data;
+    const response = await axios.post(
+      `${API_URL}/mood-colors`,
+      { date, color },
+      getAuthHeaders(token)
+    );
+    return response.data;
   } catch (error) {
-      console.error('Error setting mood color:', error);
-      throw new Error('무드 색상 저장 중 오류가 발생했습니다.');
+    console.error('Error setting mood color:', error);
+    throw new Error('무드 색상 저장 중 오류가 발생했습니다.');
   }
 };
-
 
 // 색상 조회
 export const fetchUserCalendar = async (token) => {
   try {
-      const response = await axios.get('https://43.200.233.44:3011/get-user-calendar', {
-          headers: {
-              Authorization: `Bearer ${token}`
-          }
-      });
-      return response.data;
+    const response = await axios.get(`${API_URL}/get-user-calendar`, getAuthHeaders(token));
+    return response.data;
   } catch (error) {
-      handleError(error);
+    handleError('사용자 캘린더 조회 중 오류가 발생했습니다.', error);
   }
 };
-
 
 // 프로필 사진 업로드
 export const uploadProfilePicture = async (formData, token) => {
